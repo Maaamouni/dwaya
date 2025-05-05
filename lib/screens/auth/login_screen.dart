@@ -38,14 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
 
     try {
-      final success = await authProvider.signInWithEmailPassword(email, password);
+      final success = await authProvider.signInWithEmailPassword(
+        email,
+        password,
+      );
       if (success) {
         print("LoginScreen: Email/Pass sign-in initiated successfully.");
         if (mounted) {
-           Navigator.of(context).pushAndRemoveUntil(
-             MaterialPageRoute(builder: (_) => const HomeScreen()),
-             (Route<dynamic> route) => false,
-           );
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (Route<dynamic> route) => false,
+          );
         }
       } else {
         if (mounted) _showErrorSnackbar('Login failed. Please try again.');
@@ -53,29 +56,29 @@ class _LoginScreenState extends State<LoginScreen> {
     } on FirebaseAuthException catch (e) {
       print('LoginScreen: FirebaseAuthException code: ${e.code}');
       String errorMessage = 'An error occurred. Please try again.';
-      if (e.code == 'invalid-credential' || e.code == 'user-not-found' || e.code == 'wrong-password') {
+      if (e.code == 'invalid-credential' ||
+          e.code == 'user-not-found' ||
+          e.code == 'wrong-password') {
         errorMessage = 'Invalid email or password. Please try again.';
       } else if (e.code == 'user-disabled') {
         errorMessage = 'This user account has been disabled.';
       } else if (e.code == 'invalid-email') {
-          errorMessage = 'The email address is not valid.';
+        errorMessage = 'The email address is not valid.';
       } else if (e.code == 'too-many-requests') {
-         errorMessage = 'Too many login attempts. Please try again later.';
+        errorMessage = 'Too many login attempts. Please try again later.';
       }
       if (mounted) _showErrorSnackbar(errorMessage);
     } catch (e) {
       print('LoginScreen: Generic error: $e');
-      if (mounted) _showErrorSnackbar('An unexpected error occurred. Please try again.');
+      if (mounted)
+        _showErrorSnackbar('An unexpected error occurred. Please try again.');
     }
   }
 
   void _showErrorSnackbar(String message) {
-     if (!mounted) return;
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -83,30 +86,31 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = context.read<AuthProvider>();
     bool success = await authProvider.signInWithGoogle();
     if (success && mounted) {
-       print("LoginScreen: Google Sign-In successful, navigating home.");
-       _navigateToHome();
-    } else if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(
-             content: Text('Sign-in failed. Please try again.'),
-             backgroundColor: Colors.redAccent,
-           ),
-         );
+      print("LoginScreen: Google Sign-In successful, navigating home.");
+      _navigateToHome();
+    } else if (!success) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sign-in failed. Please try again.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
   void _navigateToSignUp() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SignUpScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SignUpScreen()));
   }
 
   void _forgotPassword() {
-     print('Forgot Password tapped');
+    print('Forgot Password tapped');
   }
 
   void _navigateToHome() {
-     Navigator.of(context).pushAndRemoveUntil(
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
@@ -122,7 +126,10 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-             padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 30.0,
+              vertical: 20.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -153,8 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter your email';
-                      if (!RegExp(r"^\S+@\S+\.\S+$").hasMatch(value)) return 'Please enter a valid email';
+                      if (value == null || value.isEmpty)
+                        return 'Please enter your email';
+                      if (!RegExp(r"^\S+@\S+\.\S+$").hasMatch(value))
+                        return 'Please enter a valid email';
                       return null;
                     },
                   ),
@@ -169,15 +178,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _isPasswordVisible
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                         ),
                         onPressed: () {
-                          setState(() { _isPasswordVisible = !_isPasswordVisible; });
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
                         },
                       ),
                     ),
-                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter your password';
+                    validator: (value) {
+                      if (value == null || value.isEmpty)
+                        return 'Please enter your password';
                       return null;
                     },
                   ),
@@ -192,43 +206,53 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
 
                   ElevatedButton(
-                    onPressed: authProvider.isSigningIn ? null : _signInWithEmailPassword,
+                    onPressed:
+                        authProvider.isSigningIn
+                            ? null
+                            : _signInWithEmailPassword,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryGreen,
                       foregroundColor: white,
                       minimumSize: const Size(double.infinity, 50),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: authProvider.isSigningIn
-                        ? const SizedBox(
-                            height: 20, 
-                            width: 20, 
-                            child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(white))
-                          )
-                        : const Text('Login', style: TextStyle(fontSize: 18)),
+                    child:
+                        authProvider.isSigningIn
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  white,
+                                ),
+                              ),
+                            )
+                            : const Text(
+                              'Login',
+                              style: TextStyle(fontSize: 18),
+                            ),
                   ),
                   const SizedBox(height: 25),
 
-                   const Row(
-                     children: [
-                        Expanded(child: Divider()),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text('OR', style: TextStyle(color: darkGrey)),
-                        ),
-                        Expanded(child: Divider()),
-                     ],
-                   ),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Text('OR', style: TextStyle(color: darkGrey)),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
                   const SizedBox(height: 25),
 
                   ElevatedButton.icon(
-                    icon: isSigningIn
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent)))
-                          : const FaIcon(FontAwesomeIcons.google, color: Colors.redAccent, size: 20),
-                    label: Text(isSigningIn ? 'Signing In...' : 'Continue with Google'),
-                    onPressed: isSigningIn ? null : () => _signInWithGoogle(context),
+                    onPressed:
+                        isSigningIn ? null : () => _signInWithGoogle(context),
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: black, backgroundColor: white,
+                      foregroundColor: black,
+                      backgroundColor: white,
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -237,16 +261,44 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                     ),
+                    icon: isSigningIn
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.redAccent,
+                              ),
+                            ),
+                          )
+                        : const FaIcon(
+                            FontAwesomeIcons.google,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
+                    label: Text(
+                      isSigningIn ? 'Signing In...' : 'Continue with Google',
+                    ),
                   ),
                   const SizedBox(height: 20),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account?", style: TextStyle(color: darkGrey)),
+                      const Text(
+                        "Don't have an account?",
+                        style: TextStyle(color: darkGrey),
+                      ),
                       TextButton(
                         onPressed: _navigateToSignUp,
-                        child: const Text('Sign Up', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: primaryGreen,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -258,4 +310,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}

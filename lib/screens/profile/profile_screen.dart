@@ -18,7 +18,8 @@ class ProfileScreen extends StatelessWidget {
     final authProvider = context.read<AuthProvider>();
     await authProvider.signOut();
     // After logout, navigate back to Login screen and remove all routes behind it
-    if (context.mounted) { // Check context validity
+    if (context.mounted) {
+      // Check context validity
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (Route<dynamic> route) => false, // Remove all routes
@@ -51,15 +52,19 @@ class ProfileScreen extends StatelessWidget {
                 title: const Text('Email'),
                 subtitle: Text(user.email ?? 'No email available'),
                 trailing: IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 20, color: darkGrey),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const UpdateEmailScreen(),
-                        ),
-                      );
-                    },
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    size: 20,
+                    color: darkGrey,
                   ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const UpdateEmailScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
               // Add more user details if available (e.g., Display Name)
               if (user.displayName != null && user.displayName!.isNotEmpty)
@@ -68,26 +73,39 @@ class ProfileScreen extends StatelessWidget {
                   title: const Text('Display Name'),
                   subtitle: Text(user.displayName!),
                   trailing: IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 20, color: darkGrey),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      size: 20,
+                      color: darkGrey,
+                    ),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => EditProfileScreen(currentDisplayName: user.displayName!),
+                          builder:
+                              (_) => EditProfileScreen(
+                                currentDisplayName: user.displayName!,
+                              ),
                         ),
                       );
                     },
                   ),
                 ),
               if (user.displayName == null || user.displayName!.isEmpty)
-                 ListTile(
-                  leading: const Icon(Icons.person_add_alt_1_outlined, color: darkGrey),
+                ListTile(
+                  leading: const Icon(
+                    Icons.person_add_alt_1_outlined,
+                    color: darkGrey,
+                  ),
                   title: const Text('Add Display Name'),
                   onTap: () {
                     Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const EditProfileScreen(currentDisplayName: ''), // Pass empty string
-                        ),
-                      );
+                      MaterialPageRoute(
+                        builder:
+                            (_) => const EditProfileScreen(
+                              currentDisplayName: '',
+                            ), // Pass empty string
+                      ),
+                    );
                   },
                 ),
               // Placeholder for profile picture if available
@@ -96,8 +114,12 @@ class ProfileScreen extends StatelessWidget {
               // --- Account Management Section ---
               const Divider(height: 30),
               const Text(
-                 'Account Management',
-                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: darkGrey),
+                'Account Management',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: darkGrey,
+                ),
               ),
               const SizedBox(height: 10),
 
@@ -106,8 +128,14 @@ class ProfileScreen extends StatelessWidget {
 
               // --- Delete Account ---
               ListTile(
-                leading: Icon(Icons.delete_forever_outlined, color: Colors.redAccent[700]),
-                title: Text('Delete Account', style: TextStyle(color: Colors.redAccent[700])),
+                leading: Icon(
+                  Icons.delete_forever_outlined,
+                  color: Colors.redAccent[700],
+                ),
+                title: Text(
+                  'Delete Account',
+                  style: TextStyle(color: Colors.redAccent[700]),
+                ),
                 onTap: () => _showDeleteConfirmationDialog(context, user),
               ),
 
@@ -116,9 +144,10 @@ class ProfileScreen extends StatelessWidget {
 
               // Placeholder for Delete Account
               // ListTile(...Delete Account...)
-
             ] else
-              const Text('Not logged in'), // Should not happen if routing is correct
+              const Text(
+                'Not logged in',
+              ), // Should not happen if routing is correct
             const Spacer(), // Pushes logout button to the bottom
             Center(
               child: ElevatedButton.icon(
@@ -126,9 +155,13 @@ class ProfileScreen extends StatelessWidget {
                 label: const Text('Logout'),
                 onPressed: () => _handleLogout(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent, // Use a distinct color for logout
+                  backgroundColor:
+                      Colors.redAccent, // Use a distinct color for logout
                   foregroundColor: white,
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
@@ -144,7 +177,8 @@ class ProfileScreen extends StatelessWidget {
     final providers = user.providerData.map((p) => p.providerId).toList();
     bool hasPassword = providers.contains('password');
     bool hasGoogle = providers.contains('google.com');
-    bool hasVerifiedEmail = user.emailVerified || hasGoogle; // Google usually gives verified
+    bool hasVerifiedEmail =
+        user.emailVerified || hasGoogle; // Google usually gives verified
 
     if (hasPassword) {
       // User already has a password - show Change Password
@@ -153,27 +187,23 @@ class ProfileScreen extends StatelessWidget {
         title: const Text('Change Password'),
         trailing: const Icon(Icons.chevron_right, color: darkGrey),
         onTap: () {
-           Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ChangePasswordScreen(),
-              ),
-            );
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+          );
         },
       );
     } else if (hasVerifiedEmail) {
-       // User logged in with provider (e.g., Google) and has email, but no password set
-       // Show Set Password option
-       return ListTile(
+      // User logged in with provider (e.g., Google) and has email, but no password set
+      // Show Set Password option
+      return ListTile(
         leading: const Icon(Icons.lock_reset_outlined, color: darkGrey),
         title: const Text('Set Account Password'),
         subtitle: const Text('Add password sign-in for this account'),
         trailing: const Icon(Icons.chevron_right, color: darkGrey),
         onTap: () {
-           Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const SetPasswordScreen(),
-              ),
-            );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SetPasswordScreen()));
         },
       );
     }
@@ -183,7 +213,10 @@ class ProfileScreen extends StatelessWidget {
 
   // --- Delete Account Logic ---
 
-  Future<void> _showDeleteConfirmationDialog(BuildContext context, User user) async {
+  Future<void> _showDeleteConfirmationDialog(
+    BuildContext context,
+    User user,
+  ) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // User must tap button!
@@ -206,11 +239,13 @@ class ProfileScreen extends StatelessWidget {
               },
             ),
             TextButton(
-              style: TextButton.styleFrom(foregroundColor: Colors.redAccent[700]),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent[700],
+              ),
               child: const Text('Delete'),
               onPressed: () {
-                 Navigator.of(dialogContext).pop(); // Close the dialog
-                 _handleDeleteAccount(context, user); // Proceed with deletion
+                Navigator.of(dialogContext).pop(); // Close the dialog
+                _handleDeleteAccount(context, user); // Proceed with deletion
               },
             ),
           ],
@@ -221,24 +256,26 @@ class ProfileScreen extends StatelessWidget {
 
   Future<void> _handleDeleteAccount(BuildContext context, User user) async {
     // Check if re-authentication is needed (user has password provider)
-    bool requiresPassword = user.providerData.any((p) => p.providerId == 'password');
+    bool requiresPassword = user.providerData.any(
+      (p) => p.providerId == 'password',
+    );
     String? password;
 
     // TODO: Add loading indicator if needed
 
     try {
       if (requiresPassword) {
-         // Prompt for password for re-authentication
-         password = await _promptForPassword(context);
-         if (password == null) return; // User cancelled
+        // Prompt for password for re-authentication
+        password = await _promptForPassword(context);
+        if (password == null) return; // User cancelled
 
-         print('Re-authenticating for account deletion...');
-         AuthCredential credential = EmailAuthProvider.credential(
-            email: user.email!, // Assuming email is available
-            password: password,
-         );
-         await user.reauthenticateWithCredential(credential);
-         print('Re-authentication successful.');
+        print('Re-authenticating for account deletion...');
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!, // Assuming email is available
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+        print('Re-authentication successful.');
       }
 
       // Delete the user
@@ -248,38 +285,39 @@ class ProfileScreen extends StatelessWidget {
 
       // Log out and navigate to login
       if (context.mounted) {
-         // Show success message
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(
-              content: Text('Account deleted successfully.'),
-              backgroundColor: Colors.green,
-            ),
-         );
-         // Use AuthProvider to sign out state and trigger navigation via wrapper/listener
-         // Or navigate directly after sign out
-         await context.read<AuthProvider>().signOut();
-         if (context.mounted) {
-             Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (Route<dynamic> route) => false,
-             );
-         }
-      }
-
-    } on FirebaseAuthException catch (e) {
-        print('Firebase Auth Error deleting account: ${e.code} - ${e.message}');
-        String errorMessage = 'Failed to delete account. Please try again.';
-        if (e.code == 'wrong-password') {
-           errorMessage = 'Incorrect password. Account not deleted.';
-        } else if (e.code == 'requires-recent-login') {
-           errorMessage = 'This action requires a recent login. Please log out and log back in to delete your account.';
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted successfully.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Use AuthProvider to sign out state and trigger navigation via wrapper/listener
+        // Or navigate directly after sign out
+        await context.read<AuthProvider>().signOut();
+        if (context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (Route<dynamic> route) => false,
+          );
         }
-         if (context.mounted) _showErrorSnackbar(context, errorMessage);
+      }
+    } on FirebaseAuthException catch (e) {
+      print('Firebase Auth Error deleting account: ${e.code} - ${e.message}');
+      String errorMessage = 'Failed to delete account. Please try again.';
+      if (e.code == 'wrong-password') {
+        errorMessage = 'Incorrect password. Account not deleted.';
+      } else if (e.code == 'requires-recent-login') {
+        errorMessage =
+            'This action requires a recent login. Please log out and log back in to delete your account.';
+      }
+      if (context.mounted) _showErrorSnackbar(context, errorMessage);
     } catch (e) {
-         print('Generic error deleting account: $e');
-         if (context.mounted) _showErrorSnackbar(context, 'An unexpected error occurred.');
+      print('Generic error deleting account: $e');
+      if (context.mounted)
+        _showErrorSnackbar(context, 'An unexpected error occurred.');
     }
-     // TODO: Hide loading indicator if added
+    // TODO: Hide loading indicator if added
   }
 
   // Helper to prompt for password
@@ -287,30 +325,30 @@ class ProfileScreen extends StatelessWidget {
     String? password;
     final passwordController = TextEditingController();
     await showDialog<String>(
-        context: context,
-        builder: (BuildContext dialogContext) {
-            return AlertDialog(
-                title: const Text('Enter Password to Confirm'),
-                content: TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(hintText: "Password"),
-                ),
-                actions: <Widget>[
-                   TextButton(
-                      child: const Text('Cancel'),
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                   ),
-                   TextButton(
-                      child: const Text('Confirm'),
-                      onPressed: () {
-                         password = passwordController.text;
-                         Navigator.of(dialogContext).pop();
-                      },
-                   ),
-                ],
-            );
-        },
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Enter Password to Confirm'),
+          content: TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(hintText: "Password"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            TextButton(
+              child: const Text('Confirm'),
+              onPressed: () {
+                password = passwordController.text;
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
     passwordController.dispose();
     return password;
@@ -318,51 +356,58 @@ class ProfileScreen extends StatelessWidget {
 
   // Helper for showing errors (could be refactored)
   void _showErrorSnackbar(BuildContext context, String message) {
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
   // Helper Widget for Linked Accounts section
   Widget _buildLinkedAccountsSection(BuildContext context, User user) {
-     return Column(
-       crossAxisAlignment: CrossAxisAlignment.start,
-       children: [
-          const Divider(height: 30),
-          const Text(
-            'Sign-in Methods',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: darkGrey),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 30),
+        const Text(
+          'Sign-in Methods',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: darkGrey,
           ),
-          const SizedBox(height: 10),
-          // Display linked providers
-          if (user.providerData.isNotEmpty)
-             ...user.providerData.map((providerInfo) { // Use spread (...) here
-                  IconData iconData = Icons.link; // Default icon
-                  String providerName = providerInfo.providerId;
+        ),
+        const SizedBox(height: 10),
+        // Display linked providers using collection-if for the map/spread
+        if (user.providerData.isNotEmpty)
+          ...user.providerData.map((providerInfo) {
+            // Use spread (...) here
+            IconData iconData = Icons.link; // Default icon
+            String providerName = providerInfo.providerId;
 
-                  if (providerInfo.providerId == 'password') {
-                      iconData = Icons.email_outlined;
-                      providerName = 'Email/Password';
-                  } else if (providerInfo.providerId == 'google.com') {
-                      iconData = FontAwesomeIcons.google; // Use FontAwesome icon
-                      providerName = 'Google';
-                  }
-                  // Add more providers here if needed (e.g., phone, facebook)
+            if (providerInfo.providerId == 'password') {
+              iconData = Icons.email_outlined;
+              providerName = 'Email/Password';
+            } else if (providerInfo.providerId == 'google.com') {
+              iconData = FontAwesomeIcons.google; // Use FontAwesome icon
+              providerName = 'Google';
+            }
+            // Add more providers here if needed (e.g., phone, facebook)
 
-                  return ListTile(
-                      leading: Icon(iconData, color: darkGrey, size: 20), // Consistent icon size
-                      title: Text(providerName),
-                  );
-              }).toList()
-          else
-              const Padding(
-                 padding: EdgeInsets.symmetric(vertical: 8.0),
-                 child: Text('No sign-in methods linked.'),
-              ), // Should not happen
-       ],
-     );
+            return ListTile(
+              leading: Icon(
+                iconData,
+                color: darkGrey,
+                size: 20,
+              ), // Consistent icon size
+              title: Text(providerName),
+            );
+          }),
+        // Add a separate collection-if for the empty case
+        if (user.providerData.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: Text('No sign-in methods linked.'),
+          ), // Should not happen
+      ],
+    );
   }
-} 
+}

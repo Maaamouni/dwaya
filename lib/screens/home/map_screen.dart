@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:dwaya_app/utils/colors.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart'; // Import Provider
 import 'package:dwaya_app/providers/location_provider.dart'; // Import LocationProvider
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:dwaya_app/models/pharmacy.dart';
 
 class MapScreen extends StatefulWidget {
   // Remove userPosition parameter
@@ -15,7 +17,8 @@ class MapScreen extends StatefulWidget {
 }
 
 class MapScreenState extends State<MapScreen> {
-  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
+  final Completer<GoogleMapController> _controller =
+      Completer<GoogleMapController>();
 
   static const CameraPosition _kDefaultPosition = CameraPosition(
     target: LatLng(40.7128, -74.0060),
@@ -33,27 +36,31 @@ class MapScreenState extends State<MapScreen> {
       markerId: MarkerId('pharmacy_2'),
       position: LatLng(37.4250, -122.0860), // Example location 2
       infoWindow: InfoWindow(title: 'GoSilo Pharmacy', snippet: 'Open'),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure), // Different color?
+      icon: BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueAzure,
+      ), // Different color?
     ),
     Marker(
       markerId: MarkerId('pharmacy_3'),
       position: LatLng(37.4285, -122.0880), // Example location 3
       infoWindow: InfoWindow(title: 'Lalo Pharmacy', snippet: 'Closed'),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Red for closed?
+      icon: BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueRed,
+      ), // Red for closed?
     ),
   };
 
   // Method to get initial camera position based on provider
   CameraPosition _getInitialCameraPosition(LocationProvider locationProvider) {
-     final userPosition = locationProvider.currentPosition;
-     if (userPosition != null) {
-        return CameraPosition(
-          target: LatLng(userPosition.latitude, userPosition.longitude),
-          zoom: 14.4746,
-        );
-     } else {
-       return _kDefaultPosition;
-     }
+    final userPosition = locationProvider.currentPosition;
+    if (userPosition != null) {
+      return CameraPosition(
+        target: LatLng(userPosition.latitude, userPosition.longitude),
+        zoom: 14.4746,
+      );
+    } else {
+      return _kDefaultPosition;
+    }
   }
 
   @override
@@ -68,21 +75,26 @@ class MapScreenState extends State<MapScreen> {
           // Show map only if not loading location initially
           // Or show map centered on default while loading?
           if (!locationProvider.isLoadingLocation)
-             GoogleMap(
+            GoogleMap(
               mapType: MapType.normal,
-              initialCameraPosition: _getInitialCameraPosition(locationProvider),
+              initialCameraPosition: _getInitialCameraPosition(
+                locationProvider,
+              ),
               onMapCreated: (GoogleMapController controller) {
                 if (!_controller.isCompleted) {
-                     _controller.complete(controller);
+                  _controller.complete(controller);
                 }
               },
               markers: _markers,
               myLocationEnabled: true, // Show user location dot
               myLocationButtonEnabled: true, // Show button to center on user
-              padding: const EdgeInsets.only(top: 100.0, bottom: 0), // Adjust padding for overlay/buttons
+              padding: const EdgeInsets.only(
+                top: 100.0,
+                bottom: 0,
+              ), // Adjust padding for overlay/buttons
             )
           else // Show loading indicator while location is fetched
-             const Center(child: CircularProgressIndicator(color: primaryGreen)),
+            const Center(child: CircularProgressIndicator(color: primaryGreen)),
           // Search Bar Overlay
           Positioned(
             top: 50, // Adjust position as needed (consider SafeArea)
@@ -103,16 +115,16 @@ class MapScreenState extends State<MapScreen> {
                 ],
               ),
               child: TextField(
-                 decoration: const InputDecoration(
-                    hintText: 'Search on map...',
-                    border: InputBorder.none,
-                    icon: Icon(Icons.search, color: darkGrey),
-                    // Optional: Add clear button?
-                 ),
-                 onSubmitted: (value) {
-                    // TODO: Implement map search logic (move camera, filter markers)
-                    print('Map search submitted: $value');
-                 },
+                decoration: const InputDecoration(
+                  hintText: 'Search on map...',
+                  border: InputBorder.none,
+                  icon: Icon(Icons.search, color: darkGrey),
+                  // Optional: Add clear button?
+                ),
+                onSubmitted: (value) {
+                  // TODO: Implement map search logic (move camera, filter markers)
+                  print('Map search submitted: $value');
+                },
               ),
             ),
           ),
@@ -120,4 +132,4 @@ class MapScreenState extends State<MapScreen> {
       ),
     );
   }
-} 
+}

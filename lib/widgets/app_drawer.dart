@@ -12,7 +12,8 @@ class AppDrawer extends StatelessWidget {
     // Use context.read for one-off action
     await context.read<AuthProvider>().signOut();
     // After logout, navigate back to Login screen and remove all routes behind it
-    if (context.mounted) { // Check context validity
+    if (context.mounted) {
+      // Check context validity
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (Route<dynamic> route) => false, // Remove all routes
@@ -27,27 +28,29 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: primaryGreen,
-            ),
+            decoration: const BoxDecoration(color: primaryGreen),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Image.asset('assets/images/logo.png', height: 60), // Logo in drawer header
-                 const SizedBox(height: 10),
-                 const Text(
+                Image.asset(
+                  'assets/images/logo.png',
+                  height: 60,
+                ), // Logo in drawer header
+                const SizedBox(height: 10),
+                const Text(
                   'DOUAYA', // Updated App Name
                   style: TextStyle(color: white, fontSize: 20),
                 ),
-                 // Optionally show user email if available
-                 Consumer<AuthProvider>( // Use Consumer to get user info
-                   builder: (context, auth, child) {
-                     return Text(
-                       auth.currentUser?.email ?? 'Quick pharmacy access',
-                       style: const TextStyle(color: white, fontSize: 14),
-                     );
-                   },
-                 ),
+                // Optionally show user email if available
+                Consumer<AuthProvider>(
+                  // Use Consumer to get user info
+                  builder: (context, auth, child) {
+                    return Text(
+                      auth.currentUser?.email ?? 'Quick pharmacy access',
+                      style: const TextStyle(color: white, fontSize: 14),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -67,7 +70,7 @@ class AppDrawer extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
-           ListTile(
+          ListTile(
             leading: const Icon(Icons.info_outline, color: darkGrey),
             title: const Text('About'),
             onTap: () {
@@ -76,7 +79,7 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           const Divider(),
-           ListTile(
+          ListTile(
             leading: const Icon(Icons.logout, color: darkGrey),
             title: const Text('Logout'),
             onTap: () => _handleLogout(context), // Call logout method
@@ -86,4 +89,4 @@ class AppDrawer extends StatelessWidget {
       ),
     );
   }
-} 
+}

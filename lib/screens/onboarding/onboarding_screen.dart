@@ -41,35 +41,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       // Only request permission if NOT on web
       if (!kIsWeb) {
-         permissionGranted = await _locationService.requestLocationPermission();
+        permissionGranted = await _locationService.requestLocationPermission();
       } else {
         print('Skipping location permission request on web.');
         // Optionally, you could try HTML5 geolocation here if needed,
         // but permission_handler doesn't support it directly.
       }
     } catch (e) {
-       print("Error requesting location permission: $e");
-       // Handle error appropriately, maybe show a message
+      print("Error requesting location permission: $e");
+      // Handle error appropriately, maybe show a message
     }
 
-    if (mounted) { // Check before proceeding after await
-        if (permissionGranted) {
-          print('Location permission granted after onboarding.');
-        } else {
-          print('Location permission denied after onboarding.');
-          // Consider showing a message explaining the need for location
-        }
+    if (mounted) {
+      // Check before proceeding after await
+      if (permissionGranted) {
+        print('Location permission granted after onboarding.');
+      } else {
+        print('Location permission denied after onboarding.');
+        // Consider showing a message explaining the need for location
+      }
 
-        print('Navigating to LoginScreen...');
-        // Navigate regardless of permission (as per current logic)
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-        // No need to set _isLoading = false as we are navigating away
+      print('Navigating to LoginScreen...');
+      // Navigate regardless of permission (as per current logic)
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      // No need to set _isLoading = false as we are navigating away
     } else {
       // Widget was disposed before navigation could happen
       setState(() {
-         _isLoading = false;
+        _isLoading = false;
       });
     }
   }
@@ -97,17 +98,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               OnboardingPageWidget(
                 imagePlaceholderColor: Colors.blueGrey,
                 title: 'Find pharmacy near you',
-                description: "It's easy to find pharmacy that is near to your location. With just one tap.",
+                description:
+                    "It's easy to find pharmacy that is near to your location. With just one tap.",
               ),
               OnboardingPageWidget(
                 imagePlaceholderColor: Colors.teal,
                 title: 'Search with our database',
-                description: "It's easy to find pharmacy that is near to your location. With just one tap.",
+                description:
+                    "It's easy to find pharmacy that is near to your location. With just one tap.",
               ),
               OnboardingPageWidget(
                 imagePlaceholderColor: Colors.indigo,
                 title: 'Get delivery on your door',
-                description: "It's easy to find pharmacy that is near to your location. With just one tap.",
+                description:
+                    "It's easy to find pharmacy that is near to your location. With just one tap.",
               ),
             ],
           ),
@@ -134,12 +138,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 // Skip Button
                 TextButton(
                   // Disable skip button if loading
-                  onPressed: _isLoading || _isLastPage ? null : _finishOnboarding,
+                  onPressed:
+                      _isLoading || _isLastPage ? null : _finishOnboarding,
                   child: Text(
                     'Skip',
                     style: TextStyle(
                       // Hide skip if last page OR if loading
-                      color: _isLastPage || _isLoading ? Colors.transparent : darkGrey,
+                      color:
+                          _isLastPage || _isLoading
+                              ? Colors.transparent
+                              : darkGrey,
                       fontSize: 16,
                     ),
                   ),
@@ -147,26 +155,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 // Conditional Button: Next or Get Started
                 ElevatedButton(
                   // Use appropriate function, disable if loading
-                  onPressed: _isLoading ? null : (_isLastPage ? _finishOnboarding : _nextPage),
+                  onPressed:
+                      _isLoading
+                          ? null
+                          : (_isLastPage ? _finishOnboarding : _nextPage),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
                     foregroundColor: white,
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 30,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   // Show loading indicator or text
-                  child: _isLoading && _isLastPage 
-                      ? const SizedBox(
-                          height: 18, 
-                          width: 18, 
-                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(white))
-                        )
-                      : Text(
-                          _isLastPage ? 'Get Started' : 'Next',
-                          style: const TextStyle(fontSize: 16),
-                        ),
+                  child:
+                      _isLoading && _isLastPage
+                          ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(white),
+                            ),
+                          )
+                          : Text(
+                            _isLastPage ? 'Get Started' : 'Next',
+                            style: const TextStyle(fontSize: 16),
+                          ),
                 ),
               ],
             ),
@@ -206,7 +224,10 @@ class OnboardingPageWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             // TODO: Replace with actual Image widget when assets are available
-             child: const Center(child: Text('Image Placeholder', style: TextStyle(color: white))),          ),
+            child: const Center(
+              child: Text('Image Placeholder', style: TextStyle(color: white)),
+            ),
+          ),
           const SizedBox(height: 40),
           Text(
             title,
@@ -221,14 +242,11 @@ class OnboardingPageWidget extends StatelessWidget {
           Text(
             description,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
-              color: darkGrey,
-            ),
+            style: const TextStyle(fontSize: 16, color: darkGrey),
           ),
           const SizedBox(height: 100), // Space for indicator and buttons
         ],
       ),
     );
   }
-} 
+}

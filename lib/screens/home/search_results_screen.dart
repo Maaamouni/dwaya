@@ -13,12 +13,25 @@ class SearchResultsScreen extends StatefulWidget {
 }
 
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
-
   // TODO: Replace with actual search results fetching based on widget.searchQuery
   final List<Pharmacy> _searchResults = [
-     const Pharmacy(id: '1', name: 'Silo Pharmacy', address: '5/1 address, kuppal nagar', distance: '49.6 Km', isOpen: true, imageUrl: ''),
-     const Pharmacy(id: '4', name: 'Rmasia Pharmacy', address: '789 Pine Ln, Villagetown', distance: '1.5 Km', isOpen: true, imageUrl: ''),
-     // Add more dummy results or filter the list based on searchQuery
+    const Pharmacy(
+      id: '1',
+      name: 'Silo Pharmacy',
+      address: '5/1 address, kuppal nagar',
+      distance: '49.6 Km',
+      isOpen: true,
+      imageUrl: '',
+    ),
+    const Pharmacy(
+      id: '4',
+      name: 'Rmasia Pharmacy',
+      address: '789 Pine Ln, Villagetown',
+      distance: '1.5 Km',
+      isOpen: true,
+      imageUrl: '',
+    ),
+    // Add more dummy results or filter the list based on searchQuery
   ];
 
   @override
@@ -36,10 +49,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           style: const TextStyle(color: black, fontSize: 18),
         ),
         // Optional: Add filter/sort actions
-         actions: [
+        actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: black),
-            onPressed: () { /* TODO: Implement filter action */ },
+            onPressed: () {
+              /* TODO: Implement filter action */
+            },
           ),
         ],
       ),
@@ -52,4 +67,4 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       ),
     );
   }
-} 
+}

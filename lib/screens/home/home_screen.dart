@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Import Provider
-import 'package:geolocator/geolocator.dart';
-// import 'package:dwaya_app/services/location_service.dart'; // No longer needed here
 import 'package:dwaya_app/providers/location_provider.dart'; // Import LocationProvider
 import 'package:dwaya_app/widgets/app_drawer.dart';
 import 'package:dwaya_app/utils/colors.dart';
@@ -44,22 +42,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onItemTapped(int index) {
     if (_isSearching) {
-      setState(() { _isSearching = false; _searchController.clear(); });
+      setState(() {
+        _isSearching = false;
+        _searchController.clear();
+      });
     }
-    setState(() { _selectedIndex = index; });
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   void _toggleSearch() {
-    setState(() { _isSearching = !_isSearching; if (!_isSearching) _searchController.clear(); });
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) _searchController.clear();
+    });
   }
 
   void _handleSearchSubmitted(String value) {
-     if (value.isNotEmpty) {
-        print('Search submitted: $value');
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => SearchResultsScreen(searchQuery: value)),
-        );
-      }
+    if (value.isNotEmpty) {
+      print('Search submitted: $value');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => SearchResultsScreen(searchQuery: value),
+        ),
+      );
+    }
   }
 
   // Helper method to build the body content based on selected index and provider state
@@ -83,7 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,42 +98,44 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: white,
         elevation: 1,
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search pharmacies...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: darkGrey),
+        title:
+            _isSearching
+                ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Search pharmacies...',
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: darkGrey),
+                  ),
+                  onSubmitted: _handleSearchSubmitted,
+                )
+                : Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Image.asset('assets/images/logo.png', height: 28),
                 ),
-                onSubmitted: _handleSearchSubmitted,
-              )
-            : Padding(
-                 padding: const EdgeInsets.only(left: 8.0),
-                 child: Image.asset('assets/images/logo.png', height: 28),
-              ),
-         // Dynamically set actions based on search state
-        actions: _isSearching
-            ? [
-                // Close search button
-                IconButton(
-                  icon: const Icon(Icons.close, color: black),
-                  onPressed: _toggleSearch,
-                ),
-              ]
-            : [
-                // Search icon button
-                IconButton(
-                  icon: const Icon(Icons.search, color: black),
-                  onPressed: _toggleSearch,
-                ),
-                 // Optional: Keep other actions like notifications if needed
-                // IconButton(
-                //   icon: const Icon(Icons.notifications_none, color: black),
-                //   onPressed: () {}, 
-                // ),
-              ],
+        // Dynamically set actions based on search state
+        actions:
+            _isSearching
+                ? [
+                  // Close search button
+                  IconButton(
+                    icon: const Icon(Icons.close, color: black),
+                    onPressed: _toggleSearch,
+                  ),
+                ]
+                : [
+                  // Search icon button
+                  IconButton(
+                    icon: const Icon(Icons.search, color: black),
+                    onPressed: _toggleSearch,
+                  ),
+                  // Optional: Keep other actions like notifications if needed
+                  // IconButton(
+                  //   icon: const Icon(Icons.notifications_none, color: black),
+                  //   onPressed: () {},
+                  // ),
+                ],
       ),
       body: _buildBody(context), // Use the helper method to build body
       bottomNavigationBar: BottomNavigationBar(
@@ -168,22 +177,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// --- Update HomePageContent --- 
+// --- Update HomePageContent ---
 
-class HomePageContent extends StatefulWidget { // Change to StatefulWidget
+class HomePageContent extends StatefulWidget {
+  // Change to StatefulWidget
   const HomePageContent({super.key});
 
   @override
   State<HomePageContent> createState() => _HomePageContentState();
 }
 
-class _HomePageContentState extends State<HomePageContent> { // Create State
+class _HomePageContentState extends State<HomePageContent> {
+  // Create State
   bool _initialFetchDone = false; // Flag to prevent multiple fetches
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _fetchPharmaciesIfNeeded(); // Call fetch logic here
+    // _fetchPharmaciesIfNeeded(); // Call fetch logic here <-- OLD WAY
+    // Ensure fetch happens after the current build frame is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Check if the widget is still in the tree
+        _fetchPharmaciesIfNeeded();
+      }
+    });
   }
 
   void _fetchPharmaciesIfNeeded() {
@@ -193,12 +211,16 @@ class _HomePageContentState extends State<HomePageContent> { // Create State
     final currentLocation = locationProvider.currentPosition;
 
     // Fetch only if location is available, not loading, and fetch hasn't been done yet
-    if (currentLocation != null && !locationProvider.isLoadingLocation && !_initialFetchDone) {
+    if (currentLocation != null &&
+        !locationProvider.isLoadingLocation &&
+        !_initialFetchDone) {
       print('HomePageContent: Location available, fetching pharmacies...');
       pharmacyProvider.fetchAndSetPharmacies(
-        LatLng(currentLocation.latitude, currentLocation.longitude)
+        LatLng(currentLocation.latitude, currentLocation.longitude),
       );
-      setState(() { _initialFetchDone = true; }); // Mark fetch as done
+      setState(() {
+        _initialFetchDone = true;
+      }); // Mark fetch as done
     }
   }
 
@@ -210,7 +232,6 @@ class _HomePageContentState extends State<HomePageContent> { // Create State
     final pharmacyProvider = context.watch<PharmacyProvider>();
 
     final locationIsLoading = locationProvider.isLoadingLocation;
-    final currentPosition = locationProvider.currentPosition;
     final serviceDisabled = locationProvider.locationServiceInitiallyDisabled;
     final permissionDenied = locationProvider.locationPermissionDenied;
 
@@ -221,45 +242,53 @@ class _HomePageContentState extends State<HomePageContent> { // Create State
 
     // Check location status first (as before)
     if (locationIsLoading && !_initialFetchDone) {
-        return const Center(child: Text('Getting location...')); // More specific text
+      return const Center(
+        child: Text('Getting location...'),
+      ); // More specific text
     }
     if (serviceDisabled) {
-       return _buildLocationMessage(
-          context,
-          'Location services are disabled. Please enable them in your device settings to find nearby pharmacies.',
-          'Open Location Settings',
-          () => locationProvider.openLocationSettings()
-       );
+      return _buildLocationMessage(
+        context,
+        'Location services are disabled. Please enable them in your device settings to find nearby pharmacies.',
+        'Open Location Settings',
+        () => locationProvider.openLocationSettings(),
+      );
     }
     if (permissionDenied) {
-       return _buildLocationMessage(
-          context,
-          'Location permission is required to find nearby pharmacies. Please grant permission.',
-          'Request Permission',
-          () => locationProvider.requestPermission()
-       );
+      return _buildLocationMessage(
+        context,
+        'Location permission is required to find nearby pharmacies. Please grant permission.',
+        'Request Permission',
+        () => locationProvider.requestPermission(),
+      );
     }
 
     // Now check pharmacy fetch status
     if (pharmacyIsLoading) {
-      return const Center(child: CircularProgressIndicator(color: primaryGreen));
+      return const Center(
+        child: CircularProgressIndicator(color: primaryGreen),
+      );
     }
 
     if (pharmacyError != null) {
-        return Center(
-           child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text('Error loading pharmacies: \n$pharmacyError', textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent)),
-           )
-        ); // Show error from provider
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            'Error loading pharmacies: \n$pharmacyError',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
+      ); // Show error from provider
     }
 
     if (pharmacies.isEmpty && _initialFetchDone) {
-       // Ensure location wasn't loading before showing "No pharmacies"
-       return const Center(child: Text('No pharmacies found nearby.'));
+      // Ensure location wasn't loading before showing "No pharmacies"
+      return const Center(child: Text('No pharmacies found nearby.'));
     }
 
-    // --- Build the main content --- 
+    // --- Build the main content ---
 
     // TODO: Fetch pharmacies based on currentPosition (or show all if null?)
     // Replace dummy data with fetched data later
@@ -270,17 +299,20 @@ class _HomePageContentState extends State<HomePageContent> { // Create State
         // Refined Header (e.g., a promotional banner)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          color: primaryGreen.withOpacity(0.1), // Lighter green background
+          color: primaryGreen.withAlpha(26), // Use withAlpha instead
           width: double.infinity,
           child: const Row(
             children: [
               Icon(Icons.campaign_outlined, color: primaryGreen),
               SizedBox(width: 10),
               Expanded(
-                 child: Text(
-                    'Special offers available now! Check details.', // Example text
-                    style: TextStyle(color: primaryGreen, fontWeight: FontWeight.w500),
-                 ),
+                child: Text(
+                  'Special offers available now! Check details.', // Example text
+                  style: TextStyle(
+                    color: primaryGreen,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ],
           ),
@@ -295,27 +327,32 @@ class _HomePageContentState extends State<HomePageContent> { // Create State
   }
 
   // Helper for location status messages
-  Widget _buildLocationMessage(BuildContext context, String message, String buttonText, VoidCallback onPressed) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column( 
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: darkGrey, fontSize: 15),
-              ),
-              const SizedBox(height: 15),
-              ElevatedButton(
-                child: Text(buttonText),
-                onPressed: onPressed,
-              ),
-            ],
-          ),
+  Widget _buildLocationMessage(
+    BuildContext context,
+    String message,
+    String buttonText,
+    VoidCallback onPressed,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: darkGrey, fontSize: 15),
+            ),
+            const SizedBox(height: 15),
+            ElevatedButton(
+              onPressed: onPressed,
+              child: Text(buttonText),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 
   // Updated helper method using provider state
@@ -323,23 +360,24 @@ class _HomePageContentState extends State<HomePageContent> { // Create State
   Widget _buildPharmacyList(BuildContext context, List<Pharmacy> pharmacies) {
     // Loading, error, and empty states are handled in the build method now
     return RefreshIndicator(
-        onRefresh: () async {
-           // Trigger a new fetch when user pulls down
-           final locationProvider = context.read<LocationProvider>();
-           final currentLocation = locationProvider.currentPosition;
-           if (currentLocation != null) {
-              await context.read<PharmacyProvider>().fetchAndSetPharmacies(
-                 LatLng(currentLocation.latitude, currentLocation.longitude)
-              );
-           }
+      onRefresh: () async {
+        // Trigger a new fetch when user pulls down
+        final locationProvider = context.read<LocationProvider>();
+        final currentLocation = locationProvider.currentPosition;
+        if (currentLocation != null) {
+          await context.read<PharmacyProvider>().fetchAndSetPharmacies(
+            LatLng(currentLocation.latitude, currentLocation.longitude),
+          );
+        }
+      },
+      child: ListView.builder(
+        physics:
+            const AlwaysScrollableScrollPhysics(), // Ensure list is always scrollable for RefreshIndicator
+        itemCount: pharmacies.length,
+        itemBuilder: (context, index) {
+          return PharmacyListItem(pharmacy: pharmacies[index]);
         },
-        child: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(), // Ensure list is always scrollable for RefreshIndicator
-          itemCount: pharmacies.length,
-          itemBuilder: (context, index) {
-            return PharmacyListItem(pharmacy: pharmacies[index]);
-          },
-        ),
-      );
+      ),
+    );
   }
 }

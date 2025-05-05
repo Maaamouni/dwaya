@@ -13,9 +13,11 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isCurrentPasswordVisible = false;
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -36,7 +38,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
     if (_isLoading) return;
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final currentPassword = _currentPasswordController.text;
     final newPassword = _newPasswordController.text;
@@ -45,7 +49,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     if (user == null || user.email == null) {
       _showErrorSnackbar('Error: User not found or email missing.');
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
@@ -84,7 +90,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       } else if (e.code == 'weak-password') {
         errorMessage = 'The new password is too weak.';
       } else if (e.code == 'requires-recent-login') {
-         errorMessage = 'This action requires a recent login. Please log out and log back in.';
+        errorMessage =
+            'This action requires a recent login. Please log out and log back in.';
       }
       _showErrorSnackbar(errorMessage);
     } catch (e) {
@@ -92,18 +99,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _showErrorSnackbar('An unexpected error occurred.');
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   void _showErrorSnackbar(String message) {
-     if (!mounted) return;
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -138,12 +144,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_isCurrentPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                    onPressed: () => setState(() { _isCurrentPasswordVisible = !_isCurrentPasswordVisible; }),
+                    icon: Icon(
+                      _isCurrentPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed:
+                        () => setState(() {
+                          _isCurrentPasswordVisible =
+                              !_isCurrentPasswordVisible;
+                        }),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter your current password';
+                  if (value == null || value.isEmpty)
+                    return 'Please enter your current password';
                   return null;
                 },
               ),
@@ -156,15 +171,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 decoration: InputDecoration(
                   labelText: 'New Password',
                   border: const OutlineInputBorder(),
-                   prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_isNewPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                    onPressed: () => setState(() { _isNewPasswordVisible = !_isNewPasswordVisible; }),
+                    icon: Icon(
+                      _isNewPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed:
+                        () => setState(() {
+                          _isNewPasswordVisible = !_isNewPasswordVisible;
+                        }),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter a new password';
-                  if (value.length < 6) return 'Password must be at least 6 characters';
+                  if (value == null || value.isEmpty)
+                    return 'Please enter a new password';
+                  if (value.length < 6)
+                    return 'Password must be at least 6 characters';
                   // Add more checks if needed
                   return null;
                 },
@@ -178,15 +202,25 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
                   border: const OutlineInputBorder(),
-                   prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_isConfirmPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                    onPressed: () => setState(() { _isConfirmPasswordVisible = !_isConfirmPasswordVisible; }),
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed:
+                        () => setState(() {
+                          _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible;
+                        }),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please confirm your new password';
-                  if (value != _newPasswordController.text) return 'Passwords do not match';
+                  if (value == null || value.isEmpty)
+                    return 'Please confirm your new password';
+                  if (value != _newPasswordController.text)
+                    return 'Passwords do not match';
                   return null;
                 },
               ),
@@ -200,9 +234,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   foregroundColor: white,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(white)))
-                    : const Text('Change Password', style: TextStyle(fontSize: 18)),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(white),
+                          ),
+                        )
+                        : const Text(
+                          'Change Password',
+                          style: TextStyle(fontSize: 18),
+                        ),
               ),
             ],
           ),
@@ -210,4 +255,4 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ),
     );
   }
-} 
+}

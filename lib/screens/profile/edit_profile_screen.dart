@@ -1,8 +1,7 @@
-import 'package:dwaya_app/providers/auth_provider.dart';
-import 'package:dwaya_app/utils/colors.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:dwaya_app/providers/auth_provider.dart';
+import 'package:dwaya_app/utils/colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String currentDisplayName;
@@ -36,17 +35,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
     if (_isLoading) return;
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final newName = _nameController.text.trim();
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.currentUser;
 
     if (user == null) {
-       // Should not happen, but good practice to check
-       _showErrorSnackbar('Error: Not logged in.');
-       setState(() { _isLoading = false; });
-       return;
+      // Should not happen, but good practice to check
+      _showErrorSnackbar('Error: Not logged in.');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
     }
 
     try {
@@ -55,7 +58,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // Optionally update provider state if necessary, but popping might be enough
       // authProvider.notifyListeners(); // If direct update needed
       if (mounted) {
-         Navigator.of(context).pop(); // Go back to profile screen
+        Navigator.of(context).pop(); // Go back to profile screen
       }
     } catch (e) {
       print('Error updating display name: $e');
@@ -63,18 +66,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } finally {
       // Ensure loading state is reset even if widget is disposed during async gap
       if (mounted) {
-         setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   void _showErrorSnackbar(String message) {
-     if (!mounted) return;
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -90,9 +92,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // Save Button
           TextButton(
             onPressed: _isLoading ? null : _saveDisplayName,
-            child: _isLoading
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save', style: TextStyle(color: primaryGreen, fontSize: 16)),
+            child:
+                _isLoading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Text(
+                      'Save',
+                      style: TextStyle(color: primaryGreen, fontSize: 16),
+                    ),
           ),
         ],
       ),
@@ -123,4 +133,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
   }
-} 
+}

@@ -12,7 +12,8 @@ class LocationProvider with ChangeNotifier {
 
   Position? get currentPosition => _currentPosition;
   bool get isLoadingLocation => _isLoadingLocation;
-  bool get locationServiceInitiallyDisabled => _locationServiceInitiallyDisabled;
+  bool get locationServiceInitiallyDisabled =>
+      _locationServiceInitiallyDisabled;
   bool get locationPermissionDenied => _locationPermissionDenied;
 
   LocationProvider() {
@@ -23,8 +24,8 @@ class LocationProvider with ChangeNotifier {
   Future<void> fetchInitialLocation({bool forceDialog = false}) async {
     // Reset flags unless forced
     if (!forceDialog) {
-        _locationServiceInitiallyDisabled = false;
-        _locationPermissionDenied = false;
+      _locationServiceInitiallyDisabled = false;
+      _locationPermissionDenied = false;
     }
     _isLoadingLocation = true;
     notifyListeners();
@@ -37,17 +38,20 @@ class LocationProvider with ChangeNotifier {
       // Check status to set flags
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-         _locationServiceInitiallyDisabled = true;
-         print('LocationProvider: Location service disabled.');
+        _locationServiceInitiallyDisabled = true;
+        print('LocationProvider: Location service disabled.');
       } else {
-         LocationPermission permission = await Geolocator.checkPermission();
-         if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-             _locationPermissionDenied = true;
-             print('LocationProvider: Location permission denied.');
-         }
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          _locationPermissionDenied = true;
+          print('LocationProvider: Location permission denied.');
+        }
       }
     } else {
-       print('LocationProvider: Location fetched: ${_currentPosition?.latitude}');
+      print(
+        'LocationProvider: Location fetched: ${_currentPosition?.latitude}',
+      );
     }
 
     _isLoadingLocation = false;
@@ -56,16 +60,16 @@ class LocationProvider with ChangeNotifier {
 
   // Add methods to request permission or open settings if needed
   Future<bool> requestPermission() async {
-     bool granted = await _locationService.requestLocationPermission();
-     if (granted) {
-        await fetchInitialLocation(); // Refetch on grant
-     }
-     notifyListeners();
-     return granted;
+    bool granted = await _locationService.requestLocationPermission();
+    if (granted) {
+      await fetchInitialLocation(); // Refetch on grant
+    }
+    notifyListeners();
+    return granted;
   }
 
   Future<void> openLocationSettings() async {
-     await Geolocator.openLocationSettings();
-     // Optionally refetch after return, though user might not have enabled it yet
+    await Geolocator.openLocationSettings();
+    // Optionally refetch after return, though user might not have enabled it yet
   }
-} 
+}

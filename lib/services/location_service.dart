@@ -2,7 +2,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-
   /// Requests location permission (when in use).
   /// Returns true if permission is granted, false otherwise.
   Future<bool> requestLocationPermission() async {
@@ -32,19 +31,23 @@ class LocationService {
       // Android's shouldShowRequestPermissionRationale
       // returned true. According to Android guidelines
       // your App should show an explanatory UI now.
-      print('Location permissions are denied (asking again). Attempting to request...');
+      print(
+        'Location permissions are denied (asking again). Attempting to request...',
+      );
       // We call requestPermission again here just in case the previous `requestLocationPermission`
       // failed silently, although ideally the check should happen before calling this method.
-       permission = await Geolocator.requestPermission();
-       if (permission == LocationPermission.denied) {
-          print('Location permissions were denied by user.');
-          return null;
-       }
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Location permissions were denied by user.');
+        return null;
+      }
     }
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
-      print('Location permissions are permanently denied, we cannot request permissions.');
+      print(
+        'Location permissions are permanently denied, we cannot request permissions.',
+      );
       // Consider calling openAppSettings() here if needed, after informing user.
       return null;
     }
@@ -53,13 +56,13 @@ class LocationService {
     // continue accessing the position of the device.
     print('Location permissions granted. Fetching location...');
     try {
-        return await Geolocator.getCurrentPosition(
-            // Desired accuracy can be adjusted
-            desiredAccuracy: LocationAccuracy.medium
-        );
+      return await Geolocator.getCurrentPosition(
+        // Desired accuracy can be adjusted
+        desiredAccuracy: LocationAccuracy.medium,
+      );
     } catch (e) {
-        print('Error getting location: $e');
-        return null;
+      print('Error getting location: $e');
+      return null;
     }
   }
-} 
+}

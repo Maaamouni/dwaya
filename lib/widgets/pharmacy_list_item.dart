@@ -37,7 +37,10 @@ class PharmacyListItem extends StatelessWidget {
                   // TODO: Replace with actual image loading (Image.network or Image.asset)
                   // image: DecorationImage(image: NetworkImage(pharmacy.imageUrl), fit: BoxFit.cover),
                 ),
-                 child: const Icon(Icons.image_not_supported, color: mediumGrey), // Placeholder icon
+                child: const Icon(
+                  Icons.image_not_supported,
+                  color: mediumGrey,
+                ), // Placeholder icon
               ),
               const SizedBox(width: 15),
               // Pharmacy Details
@@ -47,7 +50,10 @@ class PharmacyListItem extends StatelessWidget {
                   children: [
                     Text(
                       pharmacy.name,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -55,7 +61,7 @@ class PharmacyListItem extends StatelessWidget {
                     Text(
                       pharmacy.address,
                       style: const TextStyle(fontSize: 13, color: darkGrey),
-                       maxLines: 1,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
@@ -71,7 +77,10 @@ class PharmacyListItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: pharmacy.isOpen ? primaryGreen.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  color:
+                      pharmacy.isOpen
+                          ? primaryGreen.withAlpha(26)
+                          : Colors.red.withAlpha(26),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -89,4 +98,4 @@ class PharmacyListItem extends StatelessWidget {
       ),
     );
   }
-} 
+}

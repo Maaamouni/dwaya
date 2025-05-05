@@ -18,4 +18,4 @@ class Pharmacy {
     this.latitude,
     this.longitude,
   });
-} 
+}

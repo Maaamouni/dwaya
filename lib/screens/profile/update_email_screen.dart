@@ -14,7 +14,8 @@ class UpdateEmailScreen extends StatefulWidget {
 class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _newEmailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController(); // For re-auth
+  final TextEditingController _passwordController =
+      TextEditingController(); // For re-auth
   bool _isLoading = false;
   bool _requiresPassword = false;
 
@@ -23,7 +24,8 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
     super.initState();
     // Check if the user has a password provider linked
     final user = context.read<AuthProvider>().currentUser;
-    _requiresPassword = user?.providerData.any((p) => p.providerId == 'password') ?? false;
+    _requiresPassword =
+        user?.providerData.any((p) => p.providerId == 'password') ?? false;
   }
 
   @override
@@ -39,7 +41,9 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
     }
     if (_isLoading) return;
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final newEmail = _newEmailController.text.trim();
     final password = _passwordController.text;
@@ -48,7 +52,9 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
 
     if (user == null || user.email == null) {
       _showErrorSnackbar('Error: User not found or email missing.');
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
@@ -73,18 +79,22 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Verification Email Sent'),
-            content: Text('A verification link has been sent to $newEmail. Please check your email and click the link to complete the update.'),
-            actions: [
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () => Navigator.of(context).pop(), // Close dialog
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Verification Email Sent'),
+                content: Text(
+                  'A verification link has been sent to $newEmail. Please check your email and click the link to complete the update.',
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text('OK'),
+                    onPressed:
+                        () => Navigator.of(context).pop(), // Close dialog
+                  ),
+                ],
               ),
-            ],
-          ),
         ).then((_) {
-           if (mounted) Navigator.of(context).pop(); // Pop UpdateEmailScreen
+          if (mounted) Navigator.of(context).pop(); // Pop UpdateEmailScreen
         });
       }
     } on FirebaseAuthException catch (e) {
@@ -93,11 +103,13 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
       if (e.code == 'wrong-password') {
         errorMessage = 'Incorrect password. Please try again.';
       } else if (e.code == 'email-already-in-use') {
-         errorMessage = 'This email address is already in use by another account.';
+        errorMessage =
+            'This email address is already in use by another account.';
       } else if (e.code == 'invalid-email') {
-          errorMessage = 'The new email address is not valid.';
+        errorMessage = 'The new email address is not valid.';
       } else if (e.code == 'requires-recent-login') {
-         errorMessage = 'This action requires a recent login. Please log out and log back in.';
+        errorMessage =
+            'This action requires a recent login. Please log out and log back in.';
       }
       _showErrorSnackbar(errorMessage);
     } catch (e) {
@@ -105,18 +117,17 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
       _showErrorSnackbar('An unexpected error occurred.');
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   void _showErrorSnackbar(String message) {
-     if (!mounted) return;
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -152,11 +163,14 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) return 'Please enter the new email address';
-                  if (!RegExp(r"^\S+@\S+\.\S+$").hasMatch(value.trim())) return 'Please enter a valid email address';
+                  if (value == null || value.trim().isEmpty)
+                    return 'Please enter the new email address';
+                  if (!RegExp(r"^\S+@\S+\.\S+$").hasMatch(value.trim()))
+                    return 'Please enter a valid email address';
                   // Prevent updating to the same email
-                  if (value.trim() == context.read<AuthProvider>().currentUser?.email) {
-                     return 'This is already your current email address.';
+                  if (value.trim() ==
+                      context.read<AuthProvider>().currentUser?.email) {
+                    return 'This is already your current email address.';
                   }
                   return null;
                 },
@@ -175,7 +189,7 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
                   ),
                   validator: (value) {
                     if (_requiresPassword && (value == null || value.isEmpty)) {
-                       return 'Please enter your current password to verify';
+                      return 'Please enter your current password to verify';
                     }
                     return null;
                   },
@@ -190,9 +204,20 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
                   foregroundColor: white,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(white)))
-                    : const Text('Send Verification Email', style: TextStyle(fontSize: 18)),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(white),
+                          ),
+                        )
+                        : const Text(
+                          'Send Verification Email',
+                          style: TextStyle(fontSize: 18),
+                        ),
               ),
             ],
           ),
@@ -200,4 +225,4 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
       ),
     );
   }
-} 
+}

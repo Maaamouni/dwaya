@@ -14,7 +14,8 @@ class SetPasswordScreen extends StatefulWidget {
 class _SetPasswordScreenState extends State<SetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
@@ -33,7 +34,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     }
     if (_isLoading) return;
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final newPassword = _newPasswordController.text;
     final authProvider = context.read<AuthProvider>();
@@ -41,15 +44,21 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
 
     if (user == null || user.email == null) {
       _showErrorSnackbar('Error: User not found or email missing.');
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
     // Check if password provider is already linked (safety check)
     if (user.providerData.any((p) => p.providerId == 'password')) {
-       _showErrorSnackbar('Error: Password sign-in already enabled for this account.');
-       setState(() { _isLoading = false; });
-       return;
+      _showErrorSnackbar(
+        'Error: Password sign-in already enabled for this account.',
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
     }
 
     // Create credential to link
@@ -68,7 +77,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Password set successfully! You can now sign in with email/password.'),
+            content: Text(
+              'Password set successfully! You can now sign in with email/password.',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -80,11 +91,14 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       if (e.code == 'weak-password') {
         errorMessage = 'The password is too weak.';
       } else if (e.code == 'credential-already-in-use') {
-         errorMessage = 'This email/password combination is already linked to another account.';
+        errorMessage =
+            'This email/password combination is already linked to another account.';
       } else if (e.code == 'email-already-in-use') {
-          errorMessage = 'The email address is already in use by another account.';
+        errorMessage =
+            'The email address is already in use by another account.';
       } else if (e.code == 'requires-recent-login') {
-          errorMessage = 'This action requires a recent login. Please log out and log back in.';
+        errorMessage =
+            'This action requires a recent login. Please log out and log back in.';
       }
       _showErrorSnackbar(errorMessage);
     } catch (e) {
@@ -92,18 +106,17 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       _showErrorSnackbar('An unexpected error occurred.');
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   void _showErrorSnackbar(String message) {
-     if (!mounted) return;
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -136,15 +149,24 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 decoration: InputDecoration(
                   labelText: 'New Password',
                   border: const OutlineInputBorder(),
-                   prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_isNewPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                    onPressed: () => setState(() { _isNewPasswordVisible = !_isNewPasswordVisible; }),
+                    icon: Icon(
+                      _isNewPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed:
+                        () => setState(() {
+                          _isNewPasswordVisible = !_isNewPasswordVisible;
+                        }),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter a password';
-                  if (value.length < 6) return 'Password must be at least 6 characters';
+                  if (value == null || value.isEmpty)
+                    return 'Please enter a password';
+                  if (value.length < 6)
+                    return 'Password must be at least 6 characters';
                   return null;
                 },
               ),
@@ -157,15 +179,25 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
                   border: const OutlineInputBorder(),
-                   prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_isConfirmPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                    onPressed: () => setState(() { _isConfirmPasswordVisible = !_isConfirmPasswordVisible; }),
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed:
+                        () => setState(() {
+                          _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible;
+                        }),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please confirm your password';
-                  if (value != _newPasswordController.text) return 'Passwords do not match';
+                  if (value == null || value.isEmpty)
+                    return 'Please confirm your password';
+                  if (value != _newPasswordController.text)
+                    return 'Passwords do not match';
                   return null;
                 },
               ),
@@ -179,9 +211,20 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   foregroundColor: white,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(white)))
-                    : const Text('Set Password', style: TextStyle(fontSize: 18)),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(white),
+                          ),
+                        )
+                        : const Text(
+                          'Set Password',
+                          style: TextStyle(fontSize: 18),
+                        ),
               ),
             ],
           ),
@@ -189,4 +232,4 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       ),
     );
   }
-} 
+}

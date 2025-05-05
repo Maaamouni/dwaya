@@ -34,8 +34,8 @@ class PharmacyProvider with ChangeNotifier {
 
   // Optional: Clear pharmacies
   void clearPharmacies() {
-     _pharmacies = [];
-     _errorMessage = null;
-     notifyListeners();
+    _pharmacies = [];
+    _errorMessage = null;
+    notifyListeners();
   }
-} 
+}
