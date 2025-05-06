@@ -7,6 +7,17 @@ class PharmacyDetailScreen extends StatelessWidget {
 
   const PharmacyDetailScreen({super.key, required this.pharmacy});
 
+  // Add the same helper function here (or move to a utils file)
+  String _formatDistance(double? meters) {
+    if (meters == null) {
+      return 'N/A';
+    }
+    if (meters < 1000) {
+      return '${meters.toStringAsFixed(0)} m away';
+    }
+    return '${(meters / 1000).toStringAsFixed(1)} km away';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,14 +43,25 @@ class PharmacyDetailScreen extends StatelessWidget {
                 pharmacy.name,
                 style: const TextStyle(color: white, fontSize: 16.0),
               ),
-              background: Container(
-                // Placeholder for the pharmacy image
-                color: mediumGrey,
-                child: const Center(
-                  child: Icon(Icons.storefront, size: 100, color: lightGrey),
-                ),
-                // TODO: Replace with actual Image.network(pharmacy.imageUrl, fit: BoxFit.cover)
-              ),
+              background: pharmacy.imageUrl.isNotEmpty
+                  ? Image.network(
+                      pharmacy.imageUrl,
+                      fit: BoxFit.cover,
+                      // Optional: Add error/loading builders if needed
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: mediumGrey,
+                        child: const Center(
+                          child: Icon(Icons.storefront, size: 100, color: lightGrey),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      // Placeholder for the pharmacy image if URL is empty
+                      color: mediumGrey,
+                      child: const Center(
+                        child: Icon(Icons.storefront, size: 100, color: lightGrey),
+                      ),
+                    ),
               stretchModes: const [StretchMode.zoomBackground],
             ),
           ),
@@ -68,7 +90,7 @@ class PharmacyDetailScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${pharmacy.address} (${pharmacy.distance} away)',
+                              '${pharmacy.address} (${_formatDistance(pharmacy.distance)})', // Use formatter
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: darkGrey,
@@ -114,9 +136,11 @@ class PharmacyDetailScreen extends StatelessWidget {
                       Icon(Icons.access_time, size: 16, color: darkGrey),
                       SizedBox(width: 8),
                       // TODO: Replace with actual working hours data
-                      Text(
-                        'Mon - Fri: 09:00 AM - 6:00 PM',
-                        style: TextStyle(fontSize: 14, color: darkGrey),
+                      Expanded(
+                        child: Text(
+                          'Mon - Fri: 09:00 AM - 6:00 PM',
+                          style: TextStyle(fontSize: 14, color: darkGrey),
+                        ),
                       ),
                     ],
                   ),
@@ -125,9 +149,11 @@ class PharmacyDetailScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.access_time, size: 16, color: darkGrey),
                       SizedBox(width: 8),
-                      Text(
-                        'Sat - Sun: Closed',
-                        style: TextStyle(fontSize: 14, color: darkGrey),
+                      Expanded(
+                        child: Text(
+                          'Sat - Sun: Closed',
+                          style: TextStyle(fontSize: 14, color: darkGrey),
+                        ),
                       ),
                     ],
                   ),

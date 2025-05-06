@@ -14,9 +14,11 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth instance
   User? _currentUser; // Changed to Firebase User
   bool _isSigningIn = false;
+  String? _errorMessage; // Add error message state
 
   User? get currentUser => _currentUser; // Changed getter type
   bool get isSigningIn => _isSigningIn;
+  String? get errorMessage => _errorMessage; // Add getter
   // Check Firebase user for authentication status
   bool get isAuthenticated => _currentUser != null;
 
@@ -26,10 +28,7 @@ class AuthProvider with ChangeNotifier {
       _currentUser = user;
       if (_currentUser != null) {
         // Optionally load additional user profile data here
-        // print(
-        //     'AuthProvider: Auth state changed: User logged in: ${_currentUser!.uid}, ${_currentUser!.email}');
       } else {
-        // print('AuthProvider: Auth state changed: User logged out.');
       }
       notifyListeners(); // Notify listeners about the change
     });
@@ -38,6 +37,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> signInWithGoogle() async {
     if (_isSigningIn) return false;
     _isSigningIn = true;
+    _errorMessage = null; // Clear previous error
     notifyListeners();
 
     bool success = false;
@@ -63,22 +63,18 @@ class AuthProvider with ChangeNotifier {
 
         // No need to manually set _currentUser, authStateChanges listener handles it
         if (userCredential.user != null) {
-          print(
-            "AuthProvider: Firebase Sign-In via Google successful: ${userCredential.user?.uid}",
-          );
           success = true;
         } else {
-          print(
-            'AuthProvider: Firebase Sign-In via Google failed (user null).',
-          );
+          // print('AuthProvider: Google Sign-In cancelled by user.');
         }
       } else {
-        print('AuthProvider: Google Sign-In cancelled by user.');
+        // print('AuthProvider: Google Sign-In cancelled by user.');
       }
     } catch (error) {
-      print(
-        "AuthProvider: Error during Google Sign-In or Firebase credential sign-in: $error",
-      );
+      // print(
+      //   "AuthProvider: Error during Google Sign-In or Firebase credential sign-in: $error",
+      // );
+      _errorMessage = "Google Sign-In failed: $error"; // Set error message
       // Consider showing a user-friendly error message
     } finally {
       _isSigningIn = false;
@@ -88,18 +84,20 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    _errorMessage = null; // Clear previous error
     try {
       // Sign out from Firebase
       await _auth.signOut();
       // Also sign out from Google
       await _googleSignIn.signOut();
-      print("AuthProvider: User signed out from Firebase and Google.");
       // No need to manually set _currentUser to null, authStateChanges listener handles it
       // notifyListeners(); // Listener handles notification
     } catch (error) {
-      print("AuthProvider: Error signing out: $error");
+      // print("AuthProvider: Error signing out: $error");
+      _errorMessage = "Sign out failed: $error"; // Set error message
       // Consider showing a user-friendly error message
     }
+    notifyListeners(); // Notify listeners even on error (to update message)
   }
 
   // --- Placeholder methods for other auth types ---
@@ -107,22 +105,23 @@ class AuthProvider with ChangeNotifier {
   Future<bool> signInWithEmailPassword(String email, String password) async {
     if (_isSigningIn) return false;
     _isSigningIn = true;
+    _errorMessage = null; // Clear previous error
     notifyListeners();
     bool success = false;
 
-    print('AuthProvider: Attempting Email/Pass Sign-In: $email');
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       // Auth state listener will update _currentUser and notify
-      print('AuthProvider: Email/Pass Sign-In successful.');
       success = true;
     } on FirebaseAuthException catch (e) {
-      print(
-        'AuthProvider: Firebase Auth Error (Sign In): ${e.code} - ${e.message}',
-      );
+      // print(
+      //   'AuthProvider: Firebase Auth Error (Sign In): ${e.code} - ${e.message}',
+      // );
+      _errorMessage = _mapAuthCodeToMessage(e.code); // Set mapped message
       // TODO: Provide user feedback based on e.code (e.g., 'invalid-credential', 'user-disabled')
     } catch (e) {
-      print('AuthProvider: Generic Sign In Error: $e');
+      // print('AuthProvider: Generic Sign In Error: $e');
+      _errorMessage = "An unexpected sign-in error occurred."; // Set generic message
       // TODO: Provide user feedback
     } finally {
       _isSigningIn = false;
@@ -134,31 +133,55 @@ class AuthProvider with ChangeNotifier {
   Future<bool> signUpWithEmailPassword(String email, String password) async {
     if (_isSigningIn) return false;
     _isSigningIn = true;
+    _errorMessage = null; // Clear previous error
     notifyListeners();
     bool success = false;
 
-    print('AuthProvider: Attempting Email/Pass Sign-Up: $email');
     try {
       await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
       // Auth state listener will update _currentUser and notify
-      print('AuthProvider: Email/Pass Sign-Up successful.');
       success = true;
     } on FirebaseAuthException catch (e) {
-      print(
-        'AuthProvider: Firebase Auth Error (Sign Up): ${e.code} - ${e.message}',
-      );
+      // print(
+      //   'AuthProvider: Firebase Auth Error (Sign Up): ${e.code} - ${e.message}',
+      // );
+      _errorMessage = _mapAuthCodeToMessage(e.code); // Set mapped message
       // TODO: Provide user feedback based on e.code (e.g., 'weak-password', 'email-already-in-use')
     } catch (e) {
-      print('AuthProvider: Generic Sign Up Error: $e');
+      // print('AuthProvider: Generic Sign Up Error: $e');
+      _errorMessage = "An unexpected sign-up error occurred."; // Set generic message
       // TODO: Provide user feedback
     } finally {
       _isSigningIn = false;
       notifyListeners();
     }
     return success;
+  }
+
+  // Helper method to map Firebase Auth error codes to user-friendly messages
+  String _mapAuthCodeToMessage(String code) {
+    switch (code) {
+      case 'invalid-credential':
+      case 'user-not-found':
+      case 'wrong-password':
+        return 'Invalid email or password. Please try again.';
+      case 'user-disabled':
+        return 'This user account has been disabled.';
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'too-many-requests':
+        return 'Too many login attempts. Please try again later.';
+      case 'weak-password':
+        return 'The password provided is too weak.';
+      case 'email-already-in-use':
+        return 'An account already exists for that email.';
+      // Add other common codes as needed
+      default:
+        return 'An authentication error occurred. Please try again.';
+    }
   }
 
   // TODO: Add methods for Phone/OTP Auth using FirebaseAuth if implementing that flow

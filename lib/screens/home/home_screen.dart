@@ -5,11 +5,13 @@ import 'package:dwaya_app/widgets/app_drawer.dart';
 import 'package:dwaya_app/utils/colors.dart';
 import 'package:dwaya_app/models/pharmacy.dart';
 import 'package:dwaya_app/widgets/pharmacy_list_item.dart';
-import 'package:dwaya_app/screens/home/search_results_screen.dart';
+// import 'package:dwaya_app/screens/home/search_results_screen.dart'; // Removed unused import
 import 'package:dwaya_app/screens/home/map_screen.dart';
 import 'package:dwaya_app/screens/profile/profile_screen.dart'; // Import ProfileScreen
 import 'package:dwaya_app/providers/pharmacy_provider.dart'; // Import PharmacyProvider
+import 'package:dwaya_app/providers/favorites_provider.dart'; // Import FavoritesProvider
 import 'package:google_maps_flutter/google_maps_flutter.dart'; // Import LatLng
+import 'dart:async'; // Import Timer
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,6 +24,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = ''; // Add state for the search query
+  Timer? _debounce; // Timer for debouncing search input
+  bool _filterOpenNow = false; // State for filtering open pharmacies
+  double? _filterMaxDistance; // State for filtering distance (meters), null means Any
 
   // Remove local location state and service instance
   // Position? _currentPosition;
@@ -37,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel(); // Cancel the debounce timer
     super.dispose();
   }
 
@@ -55,19 +62,48 @@ class _HomeScreenState extends State<HomeScreen> {
   void _toggleSearch() {
     setState(() {
       _isSearching = !_isSearching;
-      if (!_isSearching) _searchController.clear();
+      if (!_isSearching) {
+        _searchController.clear();
+        _searchQuery = ''; // Clear query when closing search
+      }
+      // Maybe trigger a refresh or filter update here if needed
     });
   }
 
+  // Update search query state on submit
   void _handleSearchSubmitted(String value) {
-    if (value.isNotEmpty) {
-      print('Search submitted: $value');
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => SearchResultsScreen(searchQuery: value),
-        ),
-      );
-    }
+    setState(() {
+      _searchQuery = value.trim();
+    });
+    // Remove navigation to SearchResultsScreen
+    // if (value.isNotEmpty) {
+    //   Navigator.of(context).push(
+    //     MaterialPageRoute(
+    //       builder: (_) => SearchResultsScreen(searchQuery: value),
+    //     ),
+    //   );
+    // }
+  }
+
+  // Update search query state as user types with debouncing
+  void _handleSearchChanged(String value) {
+    // Cancel the previous timer if it exists
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Start a new timer
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      // This code runs after 500ms of no typing
+      if (mounted) { // Check if widget is still in the tree
+          setState(() {
+            _searchQuery = value.trim();
+          });
+      }
+    });
+
+    // Don't update state immediately anymore
+    // setState(() {
+    //   _searchQuery = value.trim();
+    // });
   }
 
   // Helper method to build the body content based on selected index and provider state
@@ -77,17 +113,93 @@ class _HomeScreenState extends State<HomeScreen> {
 
     switch (_selectedIndex) {
       case 0: // Home
-        return HomePageContent(); // HomePageContent will get location from provider
+        return HomePageContent(
+          searchQuery: _searchQuery,
+          filterOpenNow: _filterOpenNow,
+          onFilterChanged: (isOpen) {
+            setState(() {
+              _filterOpenNow = isOpen;
+            });
+          },
+        );
       case 1: // Map/Search
         return MapScreen(); // MapScreen will get location from provider
-      case 2: // Analytics
-        return const Center(child: Text('Analytics Page'));
+      case 2: // Favorites (Previously Analytics)
+        // return const Center(
+        //   child: Column(
+        //     mainAxisAlignment: MainAxisAlignment.center,
+        //     children: [
+        //       Icon(Icons.analytics_outlined, size: 50, color: Colors.grey),
+        //       SizedBox(height: 10),
+        //       Text('Analytics Feature Coming Soon', style: TextStyle(color: Colors.grey)),
+        //     ],
+        //   ),
+        // );
+        // Updated placeholder for Favorites
+        // return const Center(
+        //   child: Column(
+        //     mainAxisAlignment: MainAxisAlignment.center,
+        //     children: [
+        //       Icon(Icons.favorite_border, size: 50, color: Colors.grey),
+        //       SizedBox(height: 10),
+        //       Text('Your Favorite Pharmacies', style: TextStyle(color: Colors.grey)),
+        //       // TODO: Implement actual Favorites list display
+        //     ],
+        //   ),
+        // );
+        // Actual Favorites List Implementation
+        return Consumer2<PharmacyProvider, FavoritesProvider>(
+          builder: (context, pharmacyProvider, favoritesProvider, child) {
+            // Get favorite IDs
+            final favoriteIds = favoritesProvider.favoritePharmacyIds;
+            // Filter currently loaded pharmacies
+            final favoritePharmacies = pharmacyProvider.pharmacies
+                .where((p) => favoriteIds.contains(p.id))
+                .toList();
+
+            if (favoritePharmacies.isEmpty) {
+              return const Center(
+                child: Text(
+                  'No favorite pharmacies found.\nAdd some by tapping the heart icon!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              );
+            }
+
+            // Display the list
+            return ListView.builder(
+              itemCount: favoritePharmacies.length,
+              itemBuilder: (context, index) {
+                return PharmacyListItem(pharmacy: favoritePharmacies[index]);
+              },
+            );
+          },
+        );
       case 3: // History
-        return const Center(child: Text('History Page'));
+        // return const Center(child: Text('History Page'));
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.history_outlined, size: 50, color: Colors.grey),
+              SizedBox(height: 10),
+              Text('Order History Feature Coming Soon', style: TextStyle(color: Colors.grey)),
+            ],
+          ),
+        );
       case 4: // Profile
         return const ProfileScreen(); // Use the new ProfileScreen
       default:
-        return HomePageContent(); // Default to Home
+        return HomePageContent(
+          searchQuery: _searchQuery,
+          filterOpenNow: _filterOpenNow,
+          onFilterChanged: (isOpen) {
+            setState(() {
+              _filterOpenNow = isOpen;
+            });
+          },
+        ); // Default to Home
     }
   }
 
@@ -109,33 +221,33 @@ class _HomeScreenState extends State<HomeScreen> {
                     hintStyle: TextStyle(color: darkGrey),
                   ),
                   onSubmitted: _handleSearchSubmitted,
+                  onChanged: _handleSearchChanged,
                 )
                 : Padding(
                   padding: const EdgeInsets.only(left: 8.0),
                   child: Image.asset('assets/images/logo.png', height: 28),
                 ),
-        // Dynamically set actions based on search state
+        // Dynamically set actions based on search state AND selected tab
         actions:
             _isSearching
                 ? [
-                  // Close search button
+                  // Close search button (Always show when searching)
                   IconButton(
                     icon: const Icon(Icons.close, color: black),
                     onPressed: _toggleSearch,
                   ),
                 ]
-                : [
-                  // Search icon button
-                  IconButton(
-                    icon: const Icon(Icons.search, color: black),
-                    onPressed: _toggleSearch,
-                  ),
-                  // Optional: Keep other actions like notifications if needed
-                  // IconButton(
-                  //   icon: const Icon(Icons.notifications_none, color: black),
-                  //   onPressed: () {},
-                  // ),
-                ],
+                : (
+                  // Only show search icon if NOT on the Map tab (index 1)
+                  _selectedIndex != 1
+                      ? [
+                          IconButton(
+                            icon: const Icon(Icons.search, color: black),
+                            onPressed: _toggleSearch,
+                          ),
+                        ]
+                      : [] // Show no actions on Map tab when not searching
+                ),
       ),
       body: _buildBody(context), // Use the helper method to build body
       bottomNavigationBar: BottomNavigationBar(
@@ -151,9 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.analytics_outlined),
-            activeIcon: Icon(Icons.analytics),
-            label: 'Analytics',
+            icon: Icon(Icons.favorite_outline),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Favorites',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),
@@ -180,16 +292,26 @@ class _HomeScreenState extends State<HomeScreen> {
 // --- Update HomePageContent ---
 
 class HomePageContent extends StatefulWidget {
-  // Change to StatefulWidget
-  const HomePageContent({super.key});
+  final String searchQuery;
+  final bool filterOpenNow; // Add filter state
+  final ValueChanged<bool> onFilterChanged; // Add callback
+
+  const HomePageContent({
+    super.key,
+    required this.searchQuery,
+    required this.filterOpenNow,
+    required this.onFilterChanged,
+  });
 
   @override
   State<HomePageContent> createState() => _HomePageContentState();
 }
 
 class _HomePageContentState extends State<HomePageContent> {
-  // Create State
   bool _initialFetchDone = false; // Flag to prevent multiple fetches
+
+  // Add state for distance dropdown
+  double? _selectedMaxDistance; // Null represents 'Any' distance
 
   @override
   void didChangeDependencies() {
@@ -214,7 +336,6 @@ class _HomePageContentState extends State<HomePageContent> {
     if (currentLocation != null &&
         !locationProvider.isLoadingLocation &&
         !_initialFetchDone) {
-      print('HomePageContent: Location available, fetching pharmacies...');
       pharmacyProvider.fetchAndSetPharmacies(
         LatLng(currentLocation.latitude, currentLocation.longitude),
       );
@@ -239,6 +360,34 @@ class _HomePageContentState extends State<HomePageContent> {
     final pharmacyIsLoading = pharmacyProvider.isLoading;
     final pharmacies = pharmacyProvider.pharmacies;
     final pharmacyError = pharmacyProvider.errorMessage;
+    final locationError = locationProvider.errorMessage; // Get location error
+
+    // Apply filters
+    List<Pharmacy> filteredPharmacies = pharmacies;
+
+    // Apply 'Open Now' filter
+    if (widget.filterOpenNow) {
+      filteredPharmacies = filteredPharmacies.where((p) => p.isOpen).toList();
+    }
+
+    // Apply distance filter based on dropdown state
+    if (_selectedMaxDistance != null) {
+      filteredPharmacies = filteredPharmacies.where((p) {
+        // Only include pharmacies with a valid distance within the range
+        return p.distance != null && p.distance! <= _selectedMaxDistance!;
+      }).toList();
+    }
+
+    // Apply search query filter (on top of other filters)
+    if (widget.searchQuery.isNotEmpty) {
+        filteredPharmacies = filteredPharmacies.where((pharmacy) {
+        final queryLower = widget.searchQuery.toLowerCase();
+        final nameLower = pharmacy.name.toLowerCase();
+        final addressLower = pharmacy.address.toLowerCase();
+        // Simple search: check name or address contains query
+        return nameLower.contains(queryLower) || addressLower.contains(queryLower);
+      }).toList();
+    }
 
     // Check location status first (as before)
     if (locationIsLoading && !_initialFetchDone) {
@@ -263,6 +412,20 @@ class _HomePageContentState extends State<HomePageContent> {
       );
     }
 
+    // Add check for generic location error
+    if (locationError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            'Error getting location: \n$locationError',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
+      );
+    }
+
     // Now check pharmacy fetch status
     if (pharmacyIsLoading) {
       return const Center(
@@ -283,9 +446,14 @@ class _HomePageContentState extends State<HomePageContent> {
       ); // Show error from provider
     }
 
-    if (pharmacies.isEmpty && _initialFetchDone) {
+    // Update empty check to use filtered list
+    if (filteredPharmacies.isEmpty && _initialFetchDone) {
       // Ensure location wasn't loading before showing "No pharmacies"
-      return const Center(child: Text('No pharmacies found nearby.'));
+      return Center(child: Text(
+          widget.searchQuery.isEmpty
+              ? 'No pharmacies found nearby.'
+              : 'No pharmacies found matching "${widget.searchQuery}".'
+      ));
     }
 
     // --- Build the main content ---
@@ -317,10 +485,121 @@ class _HomePageContentState extends State<HomePageContent> {
             ],
           ),
         ),
+
+        // --- Filters Section --- START
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0), // Add top padding
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Filters',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: darkGrey),
+              ),
+              const SizedBox(height: 8),
+              // Row for "Open Now" Filter Chip
+              Row(
+                children: [
+                  FilterChip(
+                    label: const Text('Open Now'),
+                    selected: widget.filterOpenNow,
+                    onSelected: widget.onFilterChanged,
+                    selectedColor: primaryGreen.withAlpha(50),
+                    checkmarkColor: primaryGreen,
+                    side: BorderSide(color: widget.filterOpenNow ? primaryGreen : Colors.grey),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0), // Adjust padding
+                  ),
+                  // Add Spacer if needed, or keep simple
+                ],
+              ),
+              const SizedBox(height: 4), // Space between filters
+
+              // --- Row for Distance Dropdown --- START
+              Row(
+                children: [
+                  const Text(
+                    'Max Distance:',
+                    style: TextStyle(fontSize: 14, color: darkGrey),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButton<double?>(
+                      value: _selectedMaxDistance,
+                      isExpanded: true, // Allow dropdown to expand
+                      underline: Container( // Custom underline
+                        height: 1,
+                        color: Colors.grey[400],
+                      ),
+                      hint: const Text('Any'), // Show 'Any' when null
+                      onChanged: (double? newValue) {
+                        setState(() {
+                          _selectedMaxDistance = newValue;
+                        });
+                      },
+                      items: <DropdownMenuItem<double?>>[
+                        // Option for 'Any' distance (value is null)
+                        const DropdownMenuItem<double?>(
+                          value: null,
+                          child: Text('Any'),
+                        ),
+                        // Options for specific distances (value in meters)
+                        const DropdownMenuItem<double?>(
+                          value: 1000.0, // 1km
+                          child: Text('1 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 3000.0, // 3km
+                          child: Text('3 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 5000.0, // 5km
+                          child: Text('5 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 10000.0, // 10km
+                          child: Text('10 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 15000.0, // 15km
+                          child: Text('15 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 20000.0, // 20km
+                          child: Text('20 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 25000.0, // 25km
+                          child: Text('25 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 50000.0, // 50km
+                          child: Text('50 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 75000.0, // 75km
+                          child: Text('75 km'),
+                        ),
+                        const DropdownMenuItem<double?>(
+                          value: 100000.0, // 100km
+                          child: Text('100 km'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // --- Row for Distance Dropdown --- END
+
+            ],
+          ),
+        ),
+        // --- Filters Section --- END
+
+        const Divider(height: 1, thickness: 1), // Divider below filters
+
         // Pharmacy List Area
         Expanded(
-          // Pass the fetched pharmacies list to the builder method
-          child: _buildPharmacyList(context, pharmacies),
+          child: _buildPharmacyList(context, filteredPharmacies),
         ),
       ],
     );
@@ -359,6 +638,10 @@ class _HomePageContentState extends State<HomePageContent> {
   // Removed unused parameters (isLoading, position, serviceDisabled, permissionDenied)
   Widget _buildPharmacyList(BuildContext context, List<Pharmacy> pharmacies) {
     // Loading, error, and empty states are handled in the build method now
+
+    // Use the passed (already filtered) list
+    // final List<Pharmacy> displayList = pharmacies;
+
     return RefreshIndicator(
       onRefresh: () async {
         // Trigger a new fetch when user pulls down
@@ -373,9 +656,9 @@ class _HomePageContentState extends State<HomePageContent> {
       child: ListView.builder(
         physics:
             const AlwaysScrollableScrollPhysics(), // Ensure list is always scrollable for RefreshIndicator
-        itemCount: pharmacies.length,
+        itemCount: pharmacies.length, // Use count from filtered list
         itemBuilder: (context, index) {
-          return PharmacyListItem(pharmacy: pharmacies[index]);
+          return PharmacyListItem(pharmacy: pharmacies[index]); // Use item from filtered list
         },
       ),
     );

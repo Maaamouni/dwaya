@@ -2,11 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:dwaya_app/models/pharmacy.dart';
 import 'package:dwaya_app/utils/colors.dart';
 import 'package:dwaya_app/screens/home/pharmacy_detail_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:dwaya_app/providers/favorites_provider.dart';
 
 class PharmacyListItem extends StatelessWidget {
   final Pharmacy pharmacy;
 
   const PharmacyListItem({super.key, required this.pharmacy});
+
+  String _formatDistance(double? meters) {
+    if (meters == null) {
+      return 'N/A';
+    }
+    if (meters < 1000) {
+      return '${meters.toStringAsFixed(0)} m away';
+    }
+    return '${(meters / 1000).toStringAsFixed(1)} km away';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,19 +40,62 @@ class PharmacyListItem extends StatelessWidget {
           child: Row(
             children: [
               // Placeholder Image
-              Container(
+              // CircleAvatar(
+              //   radius: 30,
+              //   backgroundColor: lightGrey,
+              //   child: Icon(
+              //     Icons.local_pharmacy_outlined,
+              //     color: darkGrey.withAlpha(150),
+              //     size: 30,
+              //   ),
+              // ),
+              // Display Actual Image or Placeholder
+              SizedBox(
                 width: 60,
                 height: 60,
-                decoration: BoxDecoration(
-                  color: lightGrey,
+                child: ClipRRect( // Clip the image to be rounded
                   borderRadius: BorderRadius.circular(8.0),
-                  // TODO: Replace with actual image loading (Image.network or Image.asset)
-                  // image: DecorationImage(image: NetworkImage(pharmacy.imageUrl), fit: BoxFit.cover),
+                  child: pharmacy.imageUrl.isNotEmpty
+                      ? Image.network(
+                          pharmacy.imageUrl,
+                          fit: BoxFit.cover,
+                          // Loading Builder
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child; // Image loaded
+                            return Container(
+                              color: lightGrey,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                          // Error Builder
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: lightGrey,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: darkGrey.withAlpha(150),
+                                size: 30,
+                              ),
+                            );
+                          },
+                        )
+                      : Container( // Placeholder if URL is empty
+                          color: lightGrey,
+                          child: Icon(
+                            Icons.local_pharmacy_outlined,
+                            color: darkGrey.withAlpha(150),
+                            size: 30,
+                          ),
+                        ),
                 ),
-                child: const Icon(
-                  Icons.image_not_supported,
-                  color: mediumGrey,
-                ), // Placeholder icon
               ),
               const SizedBox(width: 15),
               // Pharmacy Details
@@ -48,14 +103,46 @@ class PharmacyListItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      pharmacy.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    // Row for Name and Favorite Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Expanded name to prevent overflow issues
+                        Expanded(
+                          child: Text(
+                            pharmacy.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Favorite Button (consume provider)
+                        Consumer<FavoritesProvider>(
+                          builder: (context, favoritesProvider, child) {
+                            final isFav = favoritesProvider.isFavorite(pharmacy.id);
+                            final isLoggedIn = favoritesProvider.isLoggedIn;
+                            return IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: isLoggedIn ? (isFav ? Colors.redAccent : Colors.grey) : Colors.grey[300], // Dim if logged out
+                                size: 22, // Adjust size as needed
+                              ),
+                              // Disable onPressed if not logged in
+                              onPressed: isLoggedIn
+                                  ? () {
+                                    favoritesProvider.toggleFavorite(pharmacy.id);
+                                  }
+                                  : null,
+                            );
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -66,7 +153,7 @@ class PharmacyListItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${pharmacy.distance} away',
+                      _formatDistance(pharmacy.distance),
                       style: const TextStyle(fontSize: 13, color: darkGrey),
                     ),
                   ],

@@ -47,13 +47,14 @@ class PlacesService {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        // Decode response body explicitly as UTF-8
+        final responseBody = utf8.decode(response.bodyBytes);
+        final data = json.decode(responseBody);
 
         // Assuming the proxy returns data in a 'results' list
         // Adjust this based on your actual proxy response structure
         if (data['results'] != null && data['results'] is List) {
           final List results = data['results'];
-          print('Proxy returned ${results.length} results.');
 
           // Map proxy results to Pharmacy objects
           // TODO: Verify and adjust this mapping based on the proxy response format
@@ -63,6 +64,7 @@ class PlacesService {
             final lng = place['longitude'] as double? ?? 0.0;
             final isOpenNow =
                 place['isOpen'] as bool?; // Adjust field name if needed
+            final imageUrlFromProxy = place['imageUrl'] as String? ?? ''; // Ensure this key matches your proxy output
 
             return Pharmacy(
               id: place['id'] as String? ?? '', // Adjust field name if needed
@@ -70,32 +72,23 @@ class PlacesService {
               address: place['address'] as String? ?? 'Address not available',
               latitude: lat,
               longitude: lng,
-              distance:
-                  place['distance'] as String? ??
-                  'N/A', // Proxy might calculate distance
               isOpen: isOpenNow ?? false,
-              imageUrl:
-                  place['imageUrl'] as String? ??
-                  '', // Proxy might provide image URL
+              imageUrl: imageUrlFromProxy,
             );
           }).toList();
         } else {
           // Handle potential errors reported by the proxy
           final errorMessage = data['error'] ?? 'Unknown error from proxy';
-          print('Proxy Error: $errorMessage');
+          // print('Proxy Error: $errorMessage'); // Comment
           throw Exception('Proxy Error: $errorMessage');
         }
       } else {
-        print(
-          'HTTP Error contacting proxy: ${response.statusCode} ${response.reasonPhrase}',
-        );
-        print('Response body: ${response.body}'); // Log body for debugging
         throw Exception(
           'Failed to load pharmacies from proxy: ${response.statusCode}',
         );
       }
     } catch (e) {
-      print('Error fetching pharmacies via proxy: $e');
+      // print('Error fetching pharmacies via proxy: $e'); // Comment
       // Consider more specific error handling (e.g., network errors)
       throw Exception('Failed to fetch pharmacies via proxy: $e');
     }

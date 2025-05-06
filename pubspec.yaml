@@ -51,6 +51,8 @@ dependencies:
   firebase_core: ^3.3.0  # Replace with latest version
   firebase_auth: ^5.1.2  # Replace with latest version
   url_launcher: ^6.3.1 # Added url_launcher
+  shared_preferences: ^2.2.3 # For storing favorites locally
+  cloud_firestore: ^5.1.0 # For storing favorites in Firestore
 
 dev_dependencies:
   flutter_test:

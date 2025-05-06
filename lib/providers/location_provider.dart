@@ -9,12 +9,14 @@ class LocationProvider with ChangeNotifier {
   bool _isLoadingLocation = true;
   bool _locationServiceInitiallyDisabled = false;
   bool _locationPermissionDenied = false;
+  String? _errorMessage;
 
   Position? get currentPosition => _currentPosition;
   bool get isLoadingLocation => _isLoadingLocation;
   bool get locationServiceInitiallyDisabled =>
       _locationServiceInitiallyDisabled;
   bool get locationPermissionDenied => _locationPermissionDenied;
+  String? get errorMessage => _errorMessage;
 
   LocationProvider() {
     // Fetch location when the provider is first created
@@ -26,36 +28,38 @@ class LocationProvider with ChangeNotifier {
     if (!forceDialog) {
       _locationServiceInitiallyDisabled = false;
       _locationPermissionDenied = false;
+      _errorMessage = null;
     }
     _isLoadingLocation = true;
     notifyListeners();
 
-    print('LocationProvider: Attempting to get current location...');
-    _currentPosition = await _locationService.getCurrentLocation();
+    try {
+      // Clear previous errors/states before attempting
+      _currentPosition = await _locationService.getCurrentLocation();
 
-    if (_currentPosition == null) {
-      print('LocationProvider: Could not fetch location.');
-      // Check status to set flags
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _locationServiceInitiallyDisabled = true;
-        print('LocationProvider: Location service disabled.');
-      } else {
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
-          _locationPermissionDenied = true;
-          print('LocationProvider: Location permission denied.');
+      if (_currentPosition == null) {
+        // Check status to set flags
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) {
+          _locationServiceInitiallyDisabled = true;
+        } else {
+          LocationPermission permission = await Geolocator.checkPermission();
+          if (permission == LocationPermission.denied ||
+              permission == LocationPermission.deniedForever) {
+            _locationPermissionDenied = true;
+          }
         }
-      }
-    } else {
-      print(
-        'LocationProvider: Location fetched: ${_currentPosition?.latitude}',
-      );
-    }
+      } else {
 
-    _isLoadingLocation = false;
-    notifyListeners();
+      }
+
+      _isLoadingLocation = false;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = "Failed to get location: $e";
+      _isLoadingLocation = false;
+      notifyListeners();
+    }
   }
 
   // Add methods to request permission or open settings if needed

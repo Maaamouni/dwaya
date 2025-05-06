@@ -43,7 +43,6 @@ class _LoginScreenState extends State<LoginScreen> {
         password,
       );
       if (success) {
-        print("LoginScreen: Email/Pass sign-in initiated successfully.");
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -51,27 +50,13 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } else {
-        if (mounted) _showErrorSnackbar('Login failed. Please try again.');
+        if (mounted) _showErrorSnackbar(authProvider.errorMessage ?? 'Login failed. Please try again.');
       }
     } on FirebaseAuthException catch (e) {
-      print('LoginScreen: FirebaseAuthException code: ${e.code}');
-      String errorMessage = 'An error occurred. Please try again.';
-      if (e.code == 'invalid-credential' ||
-          e.code == 'user-not-found' ||
-          e.code == 'wrong-password') {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (e.code == 'user-disabled') {
-        errorMessage = 'This user account has been disabled.';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = 'The email address is not valid.';
-      } else if (e.code == 'too-many-requests') {
-        errorMessage = 'Too many login attempts. Please try again later.';
-      }
-      if (mounted) _showErrorSnackbar(errorMessage);
+      if (mounted) _showErrorSnackbar(authProvider.errorMessage ?? 'An authentication error occurred.');
     } catch (e) {
-      print('LoginScreen: Generic error: $e');
       if (mounted)
-        _showErrorSnackbar('An unexpected error occurred. Please try again.');
+        _showErrorSnackbar(authProvider.errorMessage ?? 'An unexpected error occurred. Please try again.');
     }
   }
 
@@ -82,17 +67,24 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Add success snackbar helper
+  void _showSuccessSnackbar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
   Future<void> _signInWithGoogle(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
     bool success = await authProvider.signInWithGoogle();
     if (success && mounted) {
-      print("LoginScreen: Google Sign-In successful, navigating home.");
       _navigateToHome();
     } else if (!success) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign-in failed. Please try again.'),
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Sign-in failed. Please try again.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -105,8 +97,68 @@ class _LoginScreenState extends State<LoginScreen> {
     ).push(MaterialPageRoute(builder: (_) => const SignUpScreen()));
   }
 
-  void _forgotPassword() {
-    print('Forgot Password tapped');
+  Future<void> _forgotPassword() async {
+    final emailController = TextEditingController();
+    bool? emailSent = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter your email address and we will send you a link to reset your password.',
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text('Send Email'),
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isNotEmpty && RegExp(r"^\S+@\S+\.\S+$").hasMatch(email)) {
+                Navigator.of(context).pop(true);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+
+    emailController.dispose();
+
+    if (emailSent == true) {
+      final email = emailController.text.trim();
+      try {
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+        if (mounted) {
+          _showSuccessSnackbar('Password reset email sent to $email. Please check your inbox.');
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = _mapAuthCodeToMessage(e.code);
+        if (mounted) {
+          _showErrorSnackbar(errorMessage);
+        }
+      } catch (e) {
+        if (mounted) {
+          _showErrorSnackbar('An unexpected error occurred. Please try again.');
+        }
+      }
+    }
   }
 
   void _navigateToHome() {
@@ -114,6 +166,17 @@ class _LoginScreenState extends State<LoginScreen> {
       MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
+  }
+
+  String _mapAuthCodeToMessage(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'user-not-found':
+        return 'No user found for that email.';
+      default:
+        return 'An error occurred sending the reset email.';
+    }
   }
 
   @override

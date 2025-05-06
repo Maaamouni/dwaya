@@ -269,19 +269,15 @@ class ProfileScreen extends StatelessWidget {
         password = await _promptForPassword(context);
         if (password == null) return; // User cancelled
 
-        print('Re-authenticating for account deletion...');
         AuthCredential credential = EmailAuthProvider.credential(
           email: user.email!, // Assuming email is available
           password: password,
         );
         await user.reauthenticateWithCredential(credential);
-        print('Re-authentication successful.');
       }
 
       // Delete the user
-      print('Deleting user account...');
       await user.delete();
-      print('User account deleted successfully.');
 
       // Log out and navigate to login
       if (context.mounted) {
@@ -303,7 +299,7 @@ class ProfileScreen extends StatelessWidget {
         }
       }
     } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Error deleting account: ${e.code} - ${e.message}');
+      // print('Firebase Auth Error deleting account: ${e.code} - ${e.message}'); // Comment
       String errorMessage = 'Failed to delete account. Please try again.';
       if (e.code == 'wrong-password') {
         errorMessage = 'Incorrect password. Account not deleted.';
@@ -313,7 +309,7 @@ class ProfileScreen extends StatelessWidget {
       }
       if (context.mounted) _showErrorSnackbar(context, errorMessage);
     } catch (e) {
-      print('Generic error deleting account: $e');
+      // print('Generic error deleting account: $e'); // Comment
       if (context.mounted)
         _showErrorSnackbar(context, 'An unexpected error occurred.');
     }

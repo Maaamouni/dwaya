@@ -55,24 +55,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
 
-    // Create credential for re-authentication
-    AuthCredential credential = EmailAuthProvider.credential(
-      email: user.email!,
-      password: currentPassword,
-    );
-
     try {
-      // Re-authenticate the user
-      print('Attempting to re-authenticate user...');
+      // Re-authenticate the user first
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
       await user.reauthenticateWithCredential(credential);
-      print('Re-authentication successful.');
 
-      // Update the password
-      print('Attempting to update password...');
+      // If re-authentication is successful, update the password
       await user.updatePassword(newPassword);
-      print('Password updated successfully.');
 
-      // Show success message and pop
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -83,8 +76,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         Navigator.of(context).pop();
       }
     } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Error changing password: ${e.code} - ${e.message}');
-      String errorMessage = 'An error occurred. Please try again.';
+      String errorMessage = 'Failed to change password. Please try again.';
       if (e.code == 'wrong-password') {
         errorMessage = 'Incorrect current password. Please try again.';
       } else if (e.code == 'weak-password') {
@@ -93,10 +85,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         errorMessage =
             'This action requires a recent login. Please log out and log back in.';
       }
-      _showErrorSnackbar(errorMessage);
+      if (mounted) _showErrorSnackbar(errorMessage);
     } catch (e) {
-      print('Generic error changing password: $e');
-      _showErrorSnackbar('An unexpected error occurred.');
+      if (mounted)
+        _showErrorSnackbar('An unexpected error occurred. Please try again.');
     } finally {
       if (mounted) {
         setState(() {

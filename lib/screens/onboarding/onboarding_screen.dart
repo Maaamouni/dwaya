@@ -36,32 +36,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _isLoading = true; // Set loading state
     });
 
-    print('Onboarding finished/skipped. Requesting location permission...');
     bool permissionGranted = false; // Default to false
     try {
       // Only request permission if NOT on web
       if (!kIsWeb) {
         permissionGranted = await _locationService.requestLocationPermission();
       } else {
-        print('Skipping location permission request on web.');
         // Optionally, you could try HTML5 geolocation here if needed,
         // but permission_handler doesn't support it directly.
       }
     } catch (e) {
-      print("Error requesting location permission: $e");
       // Handle error appropriately, maybe show a message
+      if (mounted) { // Show snackbar on error
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not request location permission.'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
     }
 
     if (mounted) {
       // Check before proceeding after await
       if (permissionGranted) {
-        print('Location permission granted after onboarding.');
       } else {
-        print('Location permission denied after onboarding.');
         // Consider showing a message explaining the need for location
       }
 
-      print('Navigating to LoginScreen...');
       // Navigate regardless of permission (as per current logic)
       Navigator.of(
         context,

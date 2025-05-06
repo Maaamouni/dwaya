@@ -54,14 +54,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       await user.updateDisplayName(newName);
-      print('Display name updated successfully');
+      // print('Display name updated successfully');
       // Optionally update provider state if necessary, but popping might be enough
       // authProvider.notifyListeners(); // If direct update needed
       if (mounted) {
+        // Notify listeners *after* successful update and *before* popping
+        context.read<AuthProvider>().notifyListeners();
         Navigator.of(context).pop(); // Go back to profile screen
       }
     } catch (e) {
-      print('Error updating display name: $e');
       _showErrorSnackbar('Failed to update display name. Please try again.');
     } finally {
       // Ensure loading state is reset even if widget is disposed during async gap

@@ -59,21 +59,17 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
     }
 
     try {
-      // Step 1: Re-authenticate if required
-      if (_requiresPassword) {
-        print('Re-authenticating for email update...');
+      // Re-authenticate user first
+      if (user.email != null && password.isNotEmpty) {
         AuthCredential credential = EmailAuthProvider.credential(
           email: user.email!,
           password: password,
         );
         await user.reauthenticateWithCredential(credential);
-        print('Re-authentication successful.');
       }
 
-      // Step 2: Call verifyBeforeUpdateEmail
-      print('Attempting to verify new email...');
+      // Update email and send verification link
       await user.verifyBeforeUpdateEmail(newEmail);
-      print('Verification email sent to $newEmail.');
 
       // Show success message and pop
       if (mounted) {
@@ -98,11 +94,8 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
         });
       }
     } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Error updating email: ${e.code} - ${e.message}');
-      String errorMessage = 'An error occurred. Please try again.';
-      if (e.code == 'wrong-password') {
-        errorMessage = 'Incorrect password. Please try again.';
-      } else if (e.code == 'email-already-in-use') {
+      String errorMessage = 'Failed to update email. Please try again.';
+      if (e.code == 'email-already-in-use') {
         errorMessage =
             'This email address is already in use by another account.';
       } else if (e.code == 'invalid-email') {
@@ -111,10 +104,10 @@ class _UpdateEmailScreenState extends State<UpdateEmailScreen> {
         errorMessage =
             'This action requires a recent login. Please log out and log back in.';
       }
-      _showErrorSnackbar(errorMessage);
+      if (mounted) _showErrorSnackbar(errorMessage);
     } catch (e) {
-      print('Generic error updating email: $e');
-      _showErrorSnackbar('An unexpected error occurred.');
+      if (mounted)
+        _showErrorSnackbar('An unexpected error occurred. Please try again.');
     } finally {
       if (mounted) {
         setState(() {

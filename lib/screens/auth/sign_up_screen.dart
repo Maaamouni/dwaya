@@ -54,7 +54,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       if (success) {
         // Navigation is handled by the authStateChanges listener
-        print("SignUpScreen: Email/Pass sign-up initiated successfully.");
         // Check if mounted before navigating
         if (mounted) {
           // Navigate to Home and remove auth screens
@@ -67,27 +66,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // This case might not be reached if exceptions are always thrown on failure
         if (mounted)
           _showErrorSnackbar(
-            'Sign up failed. Please try again.',
+            authProvider.errorMessage ?? 'Sign up failed. Please try again.', // Use provider message
           ); // Generic message if no exception but still failed
       }
     } on FirebaseAuthException catch (e) {
-      print('SignUpScreen: FirebaseAuthException code: ${e.code}');
-      String errorMessage =
-          'An error occurred during sign up. Please try again.'; // Default message
-      if (e.code == 'weak-password') {
-        errorMessage = 'The password provided is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        errorMessage = 'An account already exists for that email.';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = 'The email address is not valid.';
-      }
+      // AuthProvider maps the code
+      // print('SignUpScreen: FirebaseAuthException code: ${e.code}');
+      // String errorMessage = ...;
       // Use mounted check before showing snackbar
-      if (mounted) _showErrorSnackbar(errorMessage);
+      if (mounted) _showErrorSnackbar(authProvider.errorMessage ?? 'An authentication error occurred.'); // Use provider message
     } catch (e) {
-      // Catch any other generic errors
-      print('SignUpScreen: Generic error: $e');
+      // AuthProvider sets generic message
+      // print('SignUpScreen: Generic error: $e');
       if (mounted)
-        _showErrorSnackbar('An unexpected error occurred. Please try again.');
+        _showErrorSnackbar(authProvider.errorMessage ?? 'An unexpected error occurred. Please try again.'); // Use provider message
     }
   }
 
